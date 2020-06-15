@@ -31,7 +31,8 @@
       run_once: True
       delegate_to: 127.0.0.1
   rescue:
-    - fail:
+    - name: Fail if retry count is reached
+      fail:
         msg: Ended after 30 retries
       when: retry_count|int == 30
       run_once: True
