@@ -12,7 +12,7 @@ galaxy_info:
     - focal
   galaxy_tags:
     - kubernetes
-    - kubernetes-worker
+    - worker
     - k8s
     - network
     - networking

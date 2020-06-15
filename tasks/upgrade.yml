@@ -9,7 +9,7 @@
   when: cilium_etcd_secrets_name is defined
 
 - name: Update Helm repo
-  shell:
+  shell: # noqa 301
     set -o errexit
     set -o pipefail
     set -o nounset
@@ -41,7 +41,7 @@
   delegate_to: 127.0.0.1
 
 - name: Install Cilium pre-flight check
-  shell:
+  shell: # noqa 301
     set -o errexit
     set -o pipefail
     set -o nounset
@@ -107,6 +107,7 @@
     exit 0
   run_once: True
   delegate_to: 127.0.0.1
+  changed_when: False
   args:
     executable: "/bin/bash"
 

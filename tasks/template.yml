@@ -6,7 +6,7 @@
         state: file
         suffix: cilium_values
       delegate_to: 127.0.0.1
-      run_once: True 
+      run_once: True
       register: cilium_values_tmp_file
 
     - name: Select values file for Helm template
