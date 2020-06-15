@@ -1,6 +1,6 @@
 ---
 - name: Delete Cilium resources via Helm
-  shell:
+  shell: # noqa 301
     set -o errexit
     set -o pipefail
     set -o nounset

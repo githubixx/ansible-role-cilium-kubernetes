@@ -1,6 +1,6 @@
 ---
 - name: Check if Helm command is installed locally
-  shell: hash helm
+  shell: hash helm # noqa 305
   delegate_to: 127.0.0.1
   run_once: True
   changed_when: False
