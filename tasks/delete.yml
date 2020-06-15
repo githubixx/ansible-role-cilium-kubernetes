@@ -30,7 +30,7 @@
       state: stopped
 
   - name: Remove systemd unit file for mounting BPFFS
-    file: 
+    file:
       path: "/etc/systemd/system/sys-fs-bpf.mount"
       state: absent
     notify:
