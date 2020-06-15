@@ -1,0 +1,109 @@
+---
+- name: Create namespace
+  k8s:
+    name: "{{ cilium_namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+  delegate_to: 127.0.0.1
+  run_once: True
+
+- name: Register if Cilium Helm repository is installed
+  command: helm search repo {{ cilium_chart_name }} -n {{ cilium_namespace }}
+  register: cilium_repo_installed
+  changed_when: False
+  delegate_to: 127.0.0.1
+  run_once: True
+
+- name: Add cilium helm repository
+  command: helm repo add {{ cilium_chart_name }} {{ cilium_chart_url }}
+  changed_when: False
+  delegate_to: 127.0.0.1
+  run_once: True
+  when: "cilium_repo_installed.stdout.find(cilium_chart_name) == -1"
+
+- block:
+  - name: Install systemd unit file for mounting BPFFS
+    copy:
+      src: "files/etc/systemd/system/sys-fs-bpf.mount"
+      dest: "/etc/systemd/system/sys-fs-bpf.mount"
+      mode: 0644
+      owner: root
+      group: root
+    notify:
+      - reload systemd
+
+  - name: Enable and mount BPFFSS
+    service:
+      name: sys-fs-bpf.mount
+      enabled: yes
+      state: started
+  when:
+    - ansible_lsb.release is version('20.04', '<')
+
+- name: Install Cilium etcd secrets in k8s
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'etcd-secrets.yml.j2') }}"
+    namespace: "{{ cilium_namespace }}"
+  delegate_to: 127.0.0.1
+  run_once: True
+  when: cilium_etcd_secrets_name is defined
+
+- name: Install Cilium via Helm
+  block:
+    - name: Create temporary file for Helm values
+      tempfile:
+        state: file
+        suffix: cilium_values
+      delegate_to: 127.0.0.1
+      run_once: True
+      register: cilium_values_tmp_file
+
+    - name: Select values file for Helm template
+      template:
+        src: "{{ lookup('first_found', params) }}"
+        dest: "{{ cilium_values_tmp_file.path }}"
+      delegate_to: 127.0.0.1
+      run_once: True
+      vars:
+        params:
+          files:
+            - cilium_values_user.yml.j2
+            - cilium_values_default.yml.j2
+          paths:
+            - templates
+
+    - name: Install Cilium
+      shell:
+        set -o errexit
+        set -o pipefail
+        set -o nounset
+
+        helm install {{ cilium_chart_name }} cilium/cilium --version {{ cilium_chart_version }}
+        --namespace {{ cilium_namespace }}
+        --values {{ cilium_values_tmp_file.path }}
+
+        exit 0
+      run_once: True
+      delegate_to: 127.0.0.1
+      args:
+        executable: "/bin/bash"
+
+    - name: Delete temporary file for Helm values
+      file:
+        path: "{{ cilium_values_tmp_file.path }}"
+        state: absent
+      run_once: True
+      delegate_to: 127.0.0.1
+      when: cilium_values_tmp_file.path is defined
+
+  rescue:
+    - name: Delete temporary file for Helm values
+      file:
+        path: "{{ cilium_values_tmp_file.path }}"
+        state: absent
+      run_once: True
+      delegate_to: 127.0.0.1
+      when: cilium_values_tmp_file.path is defined
+

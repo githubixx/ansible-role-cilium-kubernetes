@@ -1,0 +1,20 @@
+galaxy_info:
+  author: Robert Wimmer
+  description: Installs Cilium network on a Kubernetes cluster.
+  license: GPLv3
+  min_ansible_version: 2.9
+  role_name: cilium-kubernetes
+  platforms:
+  - name: ArchLinux
+  - name: Ubuntu
+    versions:
+    - bionic
+    - focal
+  galaxy_tags:
+    - kubernetes
+    - kubernetes-worker
+    - k8s
+    - network
+    - networking
+    - cilium
+    - pod

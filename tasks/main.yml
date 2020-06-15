@@ -1,0 +1,37 @@
+---
+- name: Check if Helm command is installed locally
+  shell: hash helm
+  delegate_to: 127.0.0.1
+  run_once: True
+  changed_when: False
+  args:
+    executable: "/bin/bash"
+
+- name: Set default action to only render template via Helm
+  set_fact:
+    deploy_action: "template"
+  delegate_to: 127.0.0.1
+  run_once: True
+
+- name: Set action to install Cilium via Helm
+  set_fact:
+    deploy_action: "install"
+  delegate_to: 127.0.0.1
+  run_once: True
+  when: cilium_install is defined
+
+- name: Set action to upgrade Cilium via Helm
+  set_fact:
+    deploy_action: "upgrade"
+  delegate_to: 127.0.0.1
+  run_once: True
+  when: cilium_upgrade is defined
+
+- name: Set action to delete Cilium via Helm
+  set_fact:
+    deploy_action: "delete"
+  delegate_to: 127.0.0.1
+  run_once: True
+  when: cilium_delete is defined
+
+- include_tasks: "tasks/{{ deploy_action|lower }}.yml"
