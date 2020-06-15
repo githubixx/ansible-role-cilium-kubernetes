@@ -1,0 +1,65 @@
+---
+- name: Render values
+  block:
+    - name: Create temporary file for Helm values
+      tempfile:
+        state: file
+        suffix: cilium_values
+      delegate_to: 127.0.0.1
+      run_once: True 
+      register: cilium_values_tmp_file
+
+    - name: Select values file for Helm template
+      template:
+        src: "{{ lookup('first_found', params) }}"
+        dest: "{{ cilium_values_tmp_file.path }}"
+      delegate_to: 127.0.0.1
+      run_once: True
+      vars:
+        params:
+          files:
+            - cilium_values_user.yml.j2
+            - cilium_values_default.yml.j2
+          paths:
+            - templates
+
+    - name: Render Cilium template
+      shell:
+        set -o errexit
+        set -o pipefail
+        set -o nounset
+
+        helm template {{ cilium_chart_name }} cilium/cilium --version {{ cilium_chart_version }}
+        --namespace {{ cilium_namespace }}
+        --values {{ cilium_values_tmp_file.path }}
+
+        exit 0
+      run_once: True
+      delegate_to: 127.0.0.1
+      register: cilium_template
+      args:
+        executable: "/bin/bash"
+
+    - name: Delete temporary file for Helm values
+      file:
+        path: "{{ cilium_values_tmp_file.path }}"
+        state: absent
+      run_once: True
+      delegate_to: 127.0.0.1
+      when: cilium_values_tmp_file.path is defined
+
+    - name: Output rendered template
+      debug:
+        msg: "{{ cilium_template.stdout }}"
+      run_once: True
+      delegate_to: 127.0.0.1
+      changed_when: False
+
+  rescue:
+    - name: Delete temporary file for Helm values
+      file:
+        path: "{{ cilium_values_tmp_file.path }}"
+        state: absent
+      run_once: True
+      delegate_to: 127.0.0.1
+      when: cilium_values_tmp_file.path is defined

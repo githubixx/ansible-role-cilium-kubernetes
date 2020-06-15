@@ -1,0 +1,68 @@
+---
+# Helm chart version
+cilium_chart_version: "1.7.4"
+
+# Helm chart name
+cilium_chart_name: "cilium"
+
+# Helm chart URL
+cilium_chart_url: "https://helm.cilium.io/"
+
+# Kubernetes namespace where Cilium resources should be installed
+cilium_namespace: "cilium"
+
+#
+# etcd settings. If "cilium_etcd_enabled" variable is defined and set to "true",
+# Cilium etcd settings are generated and deployed. Otherwise all the following
+# "cilium_etcd_*" settings are ignored.
+#
+cilium_etcd_enabled: "true"
+
+# Interface where etcd daemons are listening. If etcd daemons are bound to
+# a WireGuard interface this setting should be "wg0" (by default) e.g.
+# You can also use a variable like "{{ etcd_interface }}" if you used
+# my etcd role (https://github.com/githubixx/ansible-role-etcd)
+cilium_etcd_interface: "eth0"
+
+# Port where etcd daemons are listening
+cilium_etcd_client_port: 2379
+
+# Ansible etcd host group in Ansible's "hosts" file. This value is used in
+# "templates/cilium_values_default.yml.j2" template to determine the IP
+# addresses of the hosts where etcd daemons are listening.
+cilium_etcd_nodes_group: "k8s_etcd"
+
+# If this variable is defined a Kubernetes secret will be installed which
+# contains the certificate files defined in "cilium_etcd_cafile",
+# "cilium_etcd_certfile" and "cilium_etcd_keyfile"
+#
+# This causes that a secure connection (https) will be established to etcd.
+# This of course requires that etcd is configured to use SSL/TLS.
+#
+# If this value is not defined (e.g. commented) the rest of the "cilium_etcd_*"
+# settings below are ignored and connection to etcd will be established
+# unsecured via "http".
+cilium_etcd_secrets_name: "cilium-etcd-secrets"
+
+# Where to find the certificate files defined below. If you used my
+# Kubernetes Certificate role (https://github.com/githubixx/ansible-role-kubernetes-ca)
+# you may already have "k8s_ca_conf_directory" variable defined which you
+# can re-use here. This role also generates the certificate files that can
+# be used for the variables below.
+# By default this will be "$HOME/k8s/certs" of the current user that runs
+# "ansible-playbook" command.
+cilium_etcd_cert_directory: "{{ '~/k8s/certs' | expanduser }}"
+
+# etcd certificate authority file (file will be fetched in "cilium_etcd_cert_directory")
+cilium_etcd_cafile: "ca-etcd.pem"
+
+# etcd certificate file (file will be fetched in "cilium_etcd_cert_directory")
+# Make sure that the certificate contains the IP addresses in the "Subject
+# Alternative Name" (SAN) of the interfaces where etcd daemons listens on
+# (that's the IP addresses of the interfaces defined in "cilium_etcd_interface").
+# This is already handled by my Kubernetes Certificate Authority role
+# (https://github.com/githubixx/ansible-role-kubernetes-ca) if you used that one.
+cilium_etcd_certfile: "cert-cilium.pem"
+
+# etcd certificate key file (file will be fetched in "cilium_etcd_cert_directory")
+cilium_etcd_keyfile: "cert-cilium-key.pem"
