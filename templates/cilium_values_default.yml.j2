@@ -5,6 +5,12 @@
 # All possible Jinja2 features/filters can be used but keep in mind that the
 # result needs to be a valid YAML file.
 
+agent:
+  keepDeprecatedProbes: true
+
+config:
+  upgradeCompatibility: 1.7
+
 global:
   cni:
     chainingMode: portmap
