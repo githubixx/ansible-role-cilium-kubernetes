@@ -1,6 +1,6 @@
 ---
 # Helm chart version
-cilium_chart_version: "1.7.4"
+cilium_chart_version: "1.8.1"
 
 # Helm chart name
 cilium_chart_name: "cilium"

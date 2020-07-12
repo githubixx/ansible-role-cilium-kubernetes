@@ -40,6 +40,48 @@
   run_once: True
   delegate_to: 127.0.0.1
 
+- name: Fetch information if there is a Cilium pre-flight check deployment leftover
+  k8s_info:
+    api_version: v1
+    kind: Deployment
+    name: cilium-pre-flight-check
+    namespace: "{{ cilium_namespace }}"
+  register: cilium_pre_flight_check_deployment
+  run_once: True
+  delegate_to: 127.0.0.1
+
+- name: Register if there is a Cilium pre-flight check deployment leftover
+  set_fact:
+    cilium_pre_flight_check_leftover="{{ cilium_pre_flight_check_deployment | json_query(query) }}"
+  vars:
+    query: "resources[0].metadata.name"
+  run_once: True
+  delegate_to: 127.0.0.1
+
+- name: Delete Cilium pre-flight check leftover
+  shell:
+    set -o errexit
+    set -o pipefail
+    set -o nounset
+
+    helm delete cilium-preflight
+      --namespace {{ cilium_namespace }}
+
+    exit 0
+  run_once: True
+  delegate_to: 127.0.0.1
+  changed_when: False
+  when: cilium_pre_flight_check_leftover.find("cilium-pre-flight-check") != -1
+  args:
+    executable: "/bin/bash"
+
+- name: Give Kubernetes 30 secs to delete Cilium pre-flight check
+  wait_for:
+    timeout: 30
+  when: cilium_pre_flight_check_leftover.find("cilium-pre-flight-check") != -1
+  run_once: True
+  delegate_to: 127.0.0.1
+
 - name: Install Cilium pre-flight check
   shell: # noqa 301
     set -o errexit
