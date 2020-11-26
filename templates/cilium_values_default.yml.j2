@@ -5,21 +5,25 @@
 # All possible Jinja2 features/filters can be used but keep in mind that the
 # result needs to be a valid YAML file.
 
-agent:
-  keepDeprecatedProbes: true
+# The Helm option agent.keepDeprecatedProbes=true will keep the exec probe in
+# the new DaemonSet.
+keepDeprecatedProbes: true
 
-config:
-  upgradeCompatibility: "1.7"
+# To minimize datapath disruption during the upgrade, the upgradeCompatibility
+# option should be set to the INITIAL Cilium version which was installed in this
+# cluster. Valid options are:
+# - 1.7
+# - 1.8
+upgradeCompatibility: "1.7"
 
-global:
-  cni:
-    chainingMode: portmap
-  {% if cilium_etcd_enabled is defined and cilium_etcd_enabled == "true" -%}
-  etcd:
-    enabled: true
-    endpoints:
-    {% for host in groups[cilium_etcd_nodes_group] -%}
-    - {% if cilium_etcd_secrets_name is defined %}https{% else %}http{% endif -%}://{{ hostvars[host]['ansible_' + cilium_etcd_interface].ipv4.address }}:{{ cilium_etcd_client_port }}
-    {% endfor -%}
-    ssl: {% if cilium_etcd_secrets_name is defined %}true{% else %}false{% endif -%}
-  {% endif %}
+cni:
+  chainingMode: portmap
+{% if cilium_etcd_enabled is defined and cilium_etcd_enabled == "true" -%}
+etcd:
+  enabled: true
+  endpoints:
+  {% for host in groups[cilium_etcd_nodes_group] -%}
+  - {% if cilium_etcd_secrets_name is defined %}https{% else %}http{% endif -%}://{{ hostvars[host]['ansible_' + cilium_etcd_interface].ipv4.address }}:{{ cilium_etcd_client_port }}
+  {% endfor -%}
+  ssl: {% if cilium_etcd_secrets_name is defined %}true{% else %}false{% endif -%}
+{% endif %}
