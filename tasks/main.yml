@@ -13,25 +13,32 @@
   delegate_to: 127.0.0.1
   run_once: True
 
-- name: Set action to install Cilium via Helm
+- name: Set action to install via Helm
   set_fact:
     deploy_action: "install"
   delegate_to: 127.0.0.1
   run_once: True
-  when: cilium_install is defined
+  when:
+    - action is defined
+    - '"install" in action'
 
-- name: Set action to upgrade Cilium via Helm
+- name: Set action to upgrade via Helm
   set_fact:
     deploy_action: "upgrade"
   delegate_to: 127.0.0.1
   run_once: True
-  when: cilium_upgrade is defined
+  when:
+    - action is defined
+    - '"upgrade" in action'
 
-- name: Set action to delete Cilium via Helm
+- name: Set action to delete via Helm
   set_fact:
     deploy_action: "delete"
   delegate_to: 127.0.0.1
   run_once: True
-  when: cilium_delete is defined
+  when:
+    - action is defined
+    - '"delete" in action'
 
-- include_tasks: "tasks/{{ deploy_action|lower }}.yml"
+- name: Include tasks to execute requested action
+  include_tasks: "tasks/{{ deploy_action|lower }}.yml"

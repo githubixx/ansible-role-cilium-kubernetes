@@ -91,8 +91,7 @@
     helm install cilium-preflight cilium/cilium --version {{ cilium_chart_version }}
       --namespace {{ cilium_namespace }}
       --set preflight.enabled=true
-      --set agent.enabled=false
-      --set config.enabled=false
+      --set agent=false
       --set operator.enabled=false
 
     exit 0
