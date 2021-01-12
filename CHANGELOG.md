@@ -1,10 +1,12 @@
 Changelog
 ---------
 
-**3.0.0+1.9.0**
+**3.0.0+1.9.1**
 
-- upgrade to Cilium v1.9.0
-- refactor cilium_values_default.yml.j2 because re-scoped in Cilium v1.9 (see [1.9 Upgrade Notes](https://docs.cilium.io/en/v1.9/operations/upgrade/#upgrade-notes) and [values.yaml](https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml))
+- upgrade to Cilium v1.9.1
+- refactor `cilium_values_default.yml.j2` because re-scoped in Cilium v1.9 (see [1.9 Upgrade Notes](https://docs.cilium.io/en/v1.9/operations/upgrade/#upgrade-notes) and [values.yaml](https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml)). Esp. value names like `agent.*`, `config.*` and `global.*` have changed.
+- small changes in Helm values for pre-flight check
+- rename extra vars `cilium_(install|upgrade|delete)=true` to `action=(install|upgrade|delete)`
 
 **2.0.0+1.8.4**
 
