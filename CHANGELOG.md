@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+**4.0.0+1.9.1**
+
+- introduce variables `cilium_release_name` and `cilium_repo_name`
+- `cilium_chart_name` had the wrong value. The `cilium_chart_name` was actually the `cilium_release_name`. If you used the default `cilium_chart_name: "cilium"` nothing will change for you. Otherwise you may need `cilium_release_name`, `cilium_repo_name` and `cilium_chart_name` accordingly.
+
 **3.0.0+1.9.1**
 
 - upgrade to Cilium v1.9.1

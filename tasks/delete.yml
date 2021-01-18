@@ -5,7 +5,7 @@
     set -o pipefail
     set -o nounset
 
-    helm uninstall {{ cilium_chart_name }} --namespace {{ cilium_namespace }}
+    helm uninstall {{ cilium_release_name }} --namespace {{ cilium_namespace }}
 
     exit 0
   run_once: True

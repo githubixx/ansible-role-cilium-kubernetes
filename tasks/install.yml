@@ -9,7 +9,7 @@
   run_once: True
 
 - name: Register if Cilium Helm repository is installed
-  command: helm search repo {{ cilium_chart_name }} -n {{ cilium_namespace }}
+  command: helm search repo {{ cilium_chart_name }} -n {{ cilium_namespace }} --version ^{{ cilium_chart_version }}
   register: cilium_repo_installed
   changed_when: False
   delegate_to: 127.0.0.1
@@ -80,8 +80,9 @@
         set -o pipefail
         set -o nounset
 
-        helm install {{ cilium_chart_name }} cilium/cilium --version {{ cilium_chart_version }}
+        helm install {{ cilium_release_name }} {{ cilium_chart_name }}
         --namespace {{ cilium_namespace }}
+        --version {{ cilium_chart_version }}
         --values {{ cilium_values_tmp_file.path }}
 
         exit 0
