@@ -6,6 +6,11 @@
       run_once: True
       delegate_to: 127.0.0.1
 
+    - name: Waiting for pre flight deployment
+      wait_for:
+        timeout: 10
+      run_once: True
+
     - name: Fetch current Cilium pre flight DaemonSet state
       k8s_info:
         api_version: v1

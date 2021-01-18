@@ -26,7 +26,7 @@
   k8s_info:
     api_version: v1
     kind: DaemonSet
-    name: "{{ cilium_chart_name }}"
+    name: "{{ cilium_release_name }}"
     namespace: "{{ cilium_namespace }}"
   register: cilium_daemonset
   run_once: True
@@ -88,7 +88,7 @@
     set -o pipefail
     set -o nounset
 
-    helm install cilium-preflight cilium/cilium --version {{ cilium_chart_version }}
+    helm install cilium-preflight {{ cilium_chart_name }} --version {{ cilium_chart_version }}
       --namespace {{ cilium_namespace }}
       --set preflight.enabled=true
       --set agent=false
@@ -182,8 +182,9 @@
         set -o pipefail
         set -o nounset
 
-        helm upgrade {{ cilium_chart_name }} cilium/cilium --version {{ cilium_chart_version }}
+        helm upgrade {{ cilium_release_name }} {{ cilium_chart_name }}
         --namespace {{ cilium_namespace }}
+        --version {{ cilium_chart_version }}
         --values {{ cilium_values_tmp_file.path }}
 
         exit 0

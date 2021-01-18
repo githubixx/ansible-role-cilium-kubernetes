@@ -29,8 +29,9 @@
         set -o pipefail
         set -o nounset
 
-        helm template {{ cilium_chart_name }} cilium/cilium --version {{ cilium_chart_version }}
+        helm template {{ cilium_release_name }} {{ cilium_chart_name }}
         --namespace {{ cilium_namespace }}
+        --version {{ cilium_chart_version }}
         --values {{ cilium_values_tmp_file.path }}
 
         exit 0

@@ -1,9 +1,15 @@
 ---
-# Helm chart version
+# Helm chart version (uses Cilium v1.9.1)
 cilium_chart_version: "1.9.1"
 
+# Helm release name
+cilium_release_name: "cilium"
+
+# Helm repository name
+cilium_repo_name: "cilium"
+
 # Helm chart name
-cilium_chart_name: "cilium"
+cilium_chart_name: "{{ cilium_repo_name }}/{{ cilium_release_name }}"
 
 # Helm chart URL
 cilium_chart_url: "https://helm.cilium.io/"
