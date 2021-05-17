@@ -1,6 +1,10 @@
 Changelog
 ---------
 
+**4.0.1+1.9.7**
+
+- upgrade to Cilium v1.9.7
+
 **4.0.0+1.9.1**
 
 - introduce variables `cilium_release_name` and `cilium_repo_name`
