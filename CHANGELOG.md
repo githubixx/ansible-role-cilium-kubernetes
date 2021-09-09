@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+**5.1.0+1.10.4**
+
+- upgrade to Cilium v1.10.4
+- add `bpf.masquerade: true` option to enable native IP masquerade support in eBPF. The eBPF-based masquerading implementation is the most efficient implementation. It requires Linux kernel >= 4.19. See: [Cilium Masquerading](https://docs.cilium.io/en/stable/concepts/networking/masquerading/)
+
 **5.0.0+1.10.1**
 
 - upgrade to Cilium v1.10.1

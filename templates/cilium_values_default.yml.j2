@@ -21,6 +21,12 @@ keepDeprecatedProbes: true
 # 1.8 -> if the initial install was Cilium 1.9.x.
 upgradeCompatibility: "1.7"
 
+# The eBPF-based masquerading implementation is the most efficient implementation.
+# It requires Linux kernel >= 4.19.
+# See: https://docs.cilium.io/en/stable/concepts/networking/masquerading/
+bpf:
+  masquerade: true
+
 cni:
   chainingMode: portmap
 {% if cilium_etcd_enabled is defined and cilium_etcd_enabled == "true" -%}
