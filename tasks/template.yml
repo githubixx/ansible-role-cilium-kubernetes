@@ -6,7 +6,7 @@
         state: file
         suffix: cilium_values
       delegate_to: 127.0.0.1
-      run_once: True
+      run_once: true
       register: cilium_values_tmp_file
 
     - name: Select values file for Helm template
@@ -14,7 +14,7 @@
         src: "{{ lookup('first_found', params) }}"
         dest: "{{ cilium_values_tmp_file.path }}"
       delegate_to: 127.0.0.1
-      run_once: True
+      run_once: true
       vars:
         params:
           files:
@@ -35,7 +35,7 @@
         --values {{ cilium_values_tmp_file.path }}
 
         exit 0
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
       register: cilium_template
       args:
@@ -45,22 +45,22 @@
       file:
         path: "{{ cilium_values_tmp_file.path }}"
         state: absent
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
       when: cilium_values_tmp_file.path is defined
 
     - name: Output rendered template
       debug:
         msg: "{{ cilium_template.stdout }}"
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
-      changed_when: False
+      changed_when: false
 
   rescue:
     - name: Delete temporary file for Helm values
       file:
         path: "{{ cilium_values_tmp_file.path }}"
         state: absent
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
       when: cilium_values_tmp_file.path is defined
