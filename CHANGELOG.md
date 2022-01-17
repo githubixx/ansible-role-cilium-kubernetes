@@ -5,7 +5,7 @@ Changelog
 
 - upgrade to Cilium v1.11.0
 - remove unneeded directories
-- fix some liniting issues
+- fix some linting issues
 
 **5.1.0+1.10.4**
 
