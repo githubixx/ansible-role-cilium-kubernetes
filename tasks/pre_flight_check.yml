@@ -3,13 +3,13 @@
     - name: Set the retry count
       set_fact:
         retry_count: "{{ 0 if retry_count is undefined else retry_count|int + 1 }}"
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
 
     - name: Waiting for pre flight deployment
       wait_for:
         timeout: 10
-      run_once: True
+      run_once: true
 
     - name: Fetch current Cilium pre flight DaemonSet state
       k8s_info:
@@ -18,7 +18,7 @@
         name: cilium-pre-flight-check
         namespace: "{{ cilium_namespace }}"
       register: cilium_pre_flight_check_daemonset
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
 
     - name: Register current Cilium pre flight pods running
@@ -26,32 +26,33 @@
         cilium_pre_flight_pods_running="{{ cilium_pre_flight_check_daemonset | json_query(query) }}"
       vars:
         query: "resources[0].status.numberReady"
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
 
     - name: Checking if Cilium pre flight pod count == Cilium pod count
       fail:
         msg: "Pre flight count: {{ cilium_pre_flight_pods_running }} / Cilium count: {{ cilium_pods_running }}"
       when: cilium_pre_flight_pods_running|int != cilium_pods_running|int
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
   rescue:
     - name: Fail if retry count is reached
       fail:
         msg: Ended after 60 retries
       when: retry_count|int == 60
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
 
-    - debug:
+    - name: Preflight waiting loop
+      debug:
         msg: "Waiting for Cilium pre flight pods starting up..."
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
 
     - name: Sleeping
       wait_for:
         timeout: 10
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
 
     - include_tasks: pre_flight_check.yml

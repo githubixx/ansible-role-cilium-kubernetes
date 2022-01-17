@@ -6,38 +6,39 @@
     kind: Namespace
     state: present
   delegate_to: 127.0.0.1
-  run_once: True
+  run_once: true
 
 - name: Register if Cilium Helm repository is installed
   command: helm search repo {{ cilium_chart_name }} -n {{ cilium_namespace }} --version ^{{ cilium_chart_version }}
   register: cilium_repo_installed
-  changed_when: False
+  changed_when: false
   delegate_to: 127.0.0.1
-  run_once: True
+  run_once: true
 
 - name: Add cilium helm repository
   command: helm repo add {{ cilium_chart_name }} {{ cilium_chart_url }}
-  changed_when: False
+  changed_when: false
   delegate_to: 127.0.0.1
-  run_once: True
+  run_once: true
   when: "cilium_repo_installed.stdout.find(cilium_chart_name) == -1"
 
-- block:
-  - name: Install systemd unit file for mounting BPFFS
-    copy:
-      src: "files/etc/systemd/system/sys-fs-bpf.mount"
-      dest: "/etc/systemd/system/sys-fs-bpf.mount"
-      mode: 0644
-      owner: root
-      group: root
-    notify:
-      - reload systemd
+- name: BPFFS handling for Ubuntu 18.04
+  block:
+    - name: Install systemd unit file for mounting BPFFS
+      copy:
+        src: "files/etc/systemd/system/sys-fs-bpf.mount"
+        dest: "/etc/systemd/system/sys-fs-bpf.mount"
+        mode: 0644
+        owner: root
+        group: root
+      notify:
+        - reload systemd
 
-  - name: Enable and mount BPFFSS
-    service:
-      name: sys-fs-bpf.mount
-      enabled: yes
-      state: started
+    - name: Enable and mount BPFFSS
+      service:
+        name: sys-fs-bpf.mount
+        enabled: true
+        state: started
   when:
     - ansible_lsb.release is version('20.04', '<')
 
@@ -47,7 +48,7 @@
     definition: "{{ lookup('template', 'etcd-secrets.yml.j2') }}"
     namespace: "{{ cilium_namespace }}"
   delegate_to: 127.0.0.1
-  run_once: True
+  run_once: true
   when: cilium_etcd_secrets_name is defined
 
 - name: Install Cilium via Helm
@@ -57,7 +58,7 @@
         state: file
         suffix: cilium_values
       delegate_to: 127.0.0.1
-      run_once: True
+      run_once: true
       register: cilium_values_tmp_file
 
     - name: Select values file for Helm template
@@ -65,7 +66,7 @@
         src: "{{ lookup('first_found', params) }}"
         dest: "{{ cilium_values_tmp_file.path }}"
       delegate_to: 127.0.0.1
-      run_once: True
+      run_once: true
       vars:
         params:
           files:
@@ -86,7 +87,7 @@
         --values {{ cilium_values_tmp_file.path }}
 
         exit 0
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
       args:
         executable: "/bin/bash"
@@ -95,7 +96,7 @@
       file:
         path: "{{ cilium_values_tmp_file.path }}"
         state: absent
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
       when: cilium_values_tmp_file.path is defined
 
@@ -104,7 +105,6 @@
       file:
         path: "{{ cilium_values_tmp_file.path }}"
         state: absent
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
       when: cilium_values_tmp_file.path is defined
-

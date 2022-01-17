@@ -5,11 +5,11 @@
     definition: "{{ lookup('template', 'etcd-secrets.yml.j2') }}"
     namespace: "{{ cilium_namespace }}"
   delegate_to: 127.0.0.1
-  run_once: True
+  run_once: true
   when: cilium_etcd_secrets_name is defined
 
 - name: Update Helm repo
-  shell: # noqa 301
+  shell:  # noqa 301
     set -o errexit
     set -o pipefail
     set -o nounset
@@ -17,7 +17,7 @@
     helm repo update
 
     exit 0
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
   args:
     executable: "/bin/bash"
@@ -29,7 +29,7 @@
     name: "{{ cilium_release_name }}"
     namespace: "{{ cilium_namespace }}"
   register: cilium_daemonset
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
 
 - name: Register current Cilium pods running
@@ -37,7 +37,7 @@
     cilium_pods_running="{{ cilium_daemonset | json_query(query) }}"
   vars:
     query: "resources[0].status.numberReady"
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
 
 - name: Fetch information if there is a Cilium pre-flight check deployment leftover
@@ -47,7 +47,7 @@
     name: cilium-pre-flight-check
     namespace: "{{ cilium_namespace }}"
   register: cilium_pre_flight_check_deployment
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
 
 - name: Register if there is a Cilium pre-flight check deployment leftover
@@ -55,7 +55,7 @@
     cilium_pre_flight_check_leftover="{{ cilium_pre_flight_check_deployment | json_query(query) }}"
   vars:
     query: "resources[0].metadata.name"
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
 
 - name: Delete Cilium pre-flight check leftover
@@ -68,9 +68,9 @@
       --namespace {{ cilium_namespace }}
 
     exit 0
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
-  changed_when: False
+  changed_when: false
   when: cilium_pre_flight_check_leftover.find("cilium-pre-flight-check") != -1
   args:
     executable: "/bin/bash"
@@ -79,11 +79,11 @@
   wait_for:
     timeout: 30
   when: cilium_pre_flight_check_leftover.find("cilium-pre-flight-check") != -1
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
 
 - name: Install Cilium pre-flight check
-  shell: # noqa 301
+  shell:  # noqa 301
     set -o errexit
     set -o pipefail
     set -o nounset
@@ -95,7 +95,7 @@
       --set operator.enabled=false
 
     exit 0
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
   args:
     executable: "/bin/bash"
@@ -110,7 +110,7 @@
     name: cilium-pre-flight-check
     namespace: "{{ cilium_namespace }}"
   register: cilium_pre_flight_deployment
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
 
 - name: Register Cilium pre flight ready replicas
@@ -118,7 +118,7 @@
     cilium_pre_flight_ready_replicas="{{ cilium_pre_flight_deployment | json_query(query) }}"
   vars:
     query: "resources[0].status.readyReplicas"
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
 
 - name: Register Cilium pre flight replicas
@@ -126,14 +126,14 @@
     cilium_pre_flight_replicas="{{ cilium_pre_flight_deployment | json_query(query) }}"
   vars:
     query: "resources[0].status.replicas"
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
 
 - name: Check replica count == ready replicas
   fail:
     msg: "Replica count ({{ cilium_pre_flight_replicas }}) != ready replicas count ({{ cilium_pre_flight_ready_replicas }})"
   when: cilium_pre_flight_replicas|int != cilium_pre_flight_ready_replicas|int
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
 
 - name: Delete Cilium pre flight via Helm
@@ -146,9 +146,9 @@
       --namespace {{ cilium_namespace }}
 
     exit 0
-  run_once: True
+  run_once: true
   delegate_to: 127.0.0.1
-  changed_when: False
+  changed_when: false
   args:
     executable: "/bin/bash"
 
@@ -159,7 +159,7 @@
         state: file
         suffix: cilium_values
       delegate_to: 127.0.0.1
-      run_once: True
+      run_once: true
       register: cilium_values_tmp_file
 
     - name: Select values file for Helm template
@@ -167,7 +167,7 @@
         src: "{{ lookup('first_found', params) }}"
         dest: "{{ cilium_values_tmp_file.path }}"
       delegate_to: 127.0.0.1
-      run_once: True
+      run_once: true
       vars:
         params:
           files:
@@ -188,7 +188,7 @@
         --values {{ cilium_values_tmp_file.path }}
 
         exit 0
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
       args:
         executable: "/bin/bash"
@@ -197,7 +197,7 @@
       file:
         path: "{{ cilium_values_tmp_file.path }}"
         state: absent
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
       when: cilium_values_tmp_file.path is defined
 
@@ -206,6 +206,6 @@
       file:
         path: "{{ cilium_values_tmp_file.path }}"
         state: absent
-      run_once: True
+      run_once: true
       delegate_to: 127.0.0.1
       when: cilium_values_tmp_file.path is defined

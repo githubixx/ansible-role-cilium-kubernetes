@@ -1,9 +1,9 @@
 ---
 - name: Check if Helm command is installed locally
-  shell: hash helm # noqa 305
+  shell: hash helm  # noqa 305
   delegate_to: 127.0.0.1
-  run_once: True
-  changed_when: False
+  run_once: true
+  changed_when: false
   args:
     executable: "/bin/bash"
 
@@ -11,13 +11,13 @@
   set_fact:
     deploy_action: "template"
   delegate_to: 127.0.0.1
-  run_once: True
+  run_once: true
 
 - name: Set action to install via Helm
   set_fact:
     deploy_action: "install"
   delegate_to: 127.0.0.1
-  run_once: True
+  run_once: true
   when:
     - action is defined
     - '"install" in action'
@@ -26,7 +26,7 @@
   set_fact:
     deploy_action: "upgrade"
   delegate_to: 127.0.0.1
-  run_once: True
+  run_once: true
   when:
     - action is defined
     - '"upgrade" in action'
@@ -35,7 +35,7 @@
   set_fact:
     deploy_action: "delete"
   delegate_to: 127.0.0.1
-  run_once: True
+  run_once: true
   when:
     - action is defined
     - '"delete" in action'

@@ -4,12 +4,13 @@ galaxy_info:
   license: GPLv3
   min_ansible_version: 2.9
   role_name: cilium_kubernetes
+  namespace: githubixx
   platforms:
-  - name: ArchLinux
-  - name: Ubuntu
-    versions:
-    - bionic
-    - focal
+    - name: ArchLinux
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
   galaxy_tags:
     - kubernetes
     - worker
