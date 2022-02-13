@@ -1,4 +1,7 @@
 ---
+
+- include_tasks: repo.yml
+
 - name: Render values
   block:
     - name: Create temporary file for Helm values
