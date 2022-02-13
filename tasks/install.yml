@@ -40,7 +40,9 @@
         enabled: true
         state: started
   when:
-    - ansible_lsb.release is version('20.04', '<')
+    - |
+      ansible_lsb.release is defined and 
+      ansible_lsb.release is version('20.04', '<')
 
 - name: Install Cilium etcd secrets in k8s
   k8s:
