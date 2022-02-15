@@ -36,9 +36,9 @@
         state: absent
       notify:
         - reload systemd
-  when: |
-    ansible_lsb.release is defined and
-    ansible_lsb.release is version('20.04', '<')
+  when:
+    - ansible_lsb.release is defined
+    - ansible_lsb.release is version('20.04', '<')
 
 - name: Delete namespace used by Cilium
   k8s:

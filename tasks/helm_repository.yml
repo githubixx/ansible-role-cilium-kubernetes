@@ -1,5 +1,4 @@
 ---
-
 - name: Register if Cilium Helm repository is installed
   command: helm search repo {{ cilium_repo_name }} -n {{ cilium_namespace }} --version ^{{ cilium_chart_version }} 2>/dev/null
   register: cilium_repo_installed

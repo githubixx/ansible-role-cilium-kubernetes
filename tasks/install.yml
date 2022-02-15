@@ -8,7 +8,7 @@
   delegate_to: 127.0.0.1
   run_once: true
 
-- include_tasks: repo.yml
+- include_tasks: helm_repository.yml
 
 - name: BPFFS handling for Ubuntu 18.04
   block:
@@ -28,9 +28,8 @@
         enabled: true
         state: started
   when:
-    - |
-      ansible_lsb.release is defined and 
-      ansible_lsb.release is version('20.04', '<')
+    - ansible_lsb.release is defined 
+    - ansible_lsb.release is version('20.04', '<')
 
 - name: Install Cilium etcd secrets in k8s
   k8s:
