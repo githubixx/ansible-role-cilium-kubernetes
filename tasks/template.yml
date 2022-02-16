@@ -1,5 +1,5 @@
 ---
-- include_tasks: repo.yml
+- include_tasks: helm_repository.yml
 
 - name: Render values
   block:
