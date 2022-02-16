@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+**6.0.1+1.11.1**
+
+- upgrade to Cilium v1.11.1
+- make sure Cilium Helm chart is installed before rendering (contribution by @ tiagoblackcode)
+
 **6.0.0+1.11.0**
 
 - upgrade to Cilium v1.11.0
