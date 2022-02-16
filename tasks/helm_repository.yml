@@ -1,0 +1,17 @@
+---
+- name: Register if Cilium Helm repository is installed
+  command: helm search repo {{ cilium_repo_name }} -n {{ cilium_namespace }} --version ^{{ cilium_chart_version }} 2>/dev/null
+  register: cilium_repo_installed
+  changed_when: false
+  delegate_to: 127.0.0.1
+  run_once: true
+  ignore_errors: true
+
+- name: Add cilium helm repository
+  command: helm repo add {{ cilium_repo_name }} {{ cilium_chart_url }}
+  changed_when: false
+  delegate_to: 127.0.0.1
+  run_once: true
+  when: |
+    cilium_repo_installed.failed or
+    cilium_repo_installed.stdout.find(cilium_repo_name) == -1

@@ -37,6 +37,7 @@
       notify:
         - reload systemd
   when:
+    - ansible_lsb.release is defined
     - ansible_lsb.release is version('20.04', '<')
 
 - name: Delete namespace used by Cilium
