@@ -29,7 +29,10 @@ bpf:
   masquerade: true
 
 cni:
-  chainingMode: portmap
+{% if cilium_chaining_mode is defined %}
+  chainingMode: {{ cilium_chaining_mode }}
+{% endif %}
+
 {% if cilium_etcd_enabled is defined and cilium_etcd_enabled == "true" -%}
 etcd:
   enabled: true
@@ -38,4 +41,23 @@ etcd:
   - {% if cilium_etcd_secrets_name is defined %}https{% else %}http{% endif -%}://{{ hostvars[host]['ansible_' + cilium_etcd_interface].ipv4.address }}:{{ cilium_etcd_client_port }}
   {% endfor -%}
   ssl: {% if cilium_etcd_secrets_name is defined %}true{% else %}false{% endif -%}
+{% endif %}
+
+ipam:
+  mode: "{{ cilium_ipam_mode }}"
+  operator:
+{% if cilium_ipam_cluster_pool_pod_cidr is defined %}
+    clusterPoolIPv4PodCIDR: "{{ cilium_ipam_cluster_pool_pod_cidr }}"
+    clusterPoolIPv4PodCIDRList: [ "{{ cilium_ipam_cluster_pool_pod_cidr }}" ]
+{% endif %}
+
+{% if cilium_bgp_enabled %}
+bgp:
+  enabled: true
+  announce:
+    loadbalancerIP: true
+{% endif %}
+
+{% if cilium_kube_proxy_replacement is defined %}
+kubeProxyReplacement: "{{ cilium_kube_proxy_replacement }}"
 {% endif %}

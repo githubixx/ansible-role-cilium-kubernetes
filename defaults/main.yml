@@ -72,3 +72,35 @@ cilium_etcd_certfile: "cert-cilium.pem"
 
 # etcd certificate key file (file will be fetched in "cilium_etcd_cert_directory")
 cilium_etcd_keyfile: "cert-cilium-key.pem"
+
+cilium_chaining_mode: portmap
+
+# the IP addressing mode Cilium will use, default is "cluster-pool"
+cilium_ipam_mode: cluster-pool
+
+# when the cluster-pool IPAM mode is used, specify the CIDR used for pod IP allocation
+cilium_ipam_cluster_pool_pod_cidr: "10.200.0.0/16"
+
+# enable BGP annoucements using Cilium's MetalLB integration
+cilium_bgp_enabled: false
+
+# the BGP config file contents that will be added to the ConfigMap
+# reference: https://metallb.universe.tf/configuration/
+# example:
+# cilium_bgp_config: |
+#  peers:
+#    - peer-address: 10.31.0.1
+#      peer-asn: 123
+#      my-asn: 321
+#
+#  address-pools:
+#    - name: private
+#      avoid-buggy-ips: true
+#      protocol: bgp
+#      addresses:
+#        - 10.33.0.0/24
+cilium_bgp_config: ~
+
+# Whether or not Cilium should replace kube-proxy for network operations.
+# The default is `probe` despite the Helm chart suggesting it's `disabled`.
+cilium_kube_proxy_replacement: ~
