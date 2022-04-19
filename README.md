@@ -6,7 +6,7 @@ This Ansible role installs [Cilium](https://docs.cilium.io) network on a Kuberne
 Versions
 --------
 
-I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `6.0.0+1.11.1` means this is release `6.0.0` of this role and it contains Cilium chart version `1.11.1`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
+I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `6.0.2+1.11.4` means this is release `6.0.2` of this role and it contains Cilium chart version `1.11.4`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
 
 Requirements
 ------------
@@ -20,7 +20,7 @@ Role Variables
 
 ```
 # Helm chart version
-cilium_chart_version: "1.11.1"
+cilium_chart_version: "1.11.4"
 
 # Helm chart name
 cilium_chart_name: "cilium"
@@ -115,9 +115,9 @@ ansible-playbook --tags=role-cilium-kubernetes --extra-vars action=install k8s.y
 
 To check if everything was deployed use the usual `kubectl` commands like `kubectl -n <cilium_namespace> get pods -o wide`.
 
-As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/months the role also can do upgrades. The role basically executes what is described in [Cilium upgrade guide](https://docs.cilium.io/en/v1.10/operations/upgrade/). That means the Cilium pre-flight check will be installed and some checks are executed before the update actually takes place. Have a look at `tasks/upgrade.yml` to see what's happening before, during and after the update. Of course you should consult [Cilium upgrade guide](https://docs.cilium.io/en/v1.10/operations/upgrade/) in general to check for major changes and stuff like that before upgrading. [Roll back](https://docs.cilium.io/en/v1.10/operations/upgrade/#step-3-rolling-back) is currently not implemented but can be easily done via `kubectl` as described in the upgrade document.
+As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/months the role also can do upgrades. The role basically executes what is described in [Cilium upgrade guide](https://docs.cilium.io/en/v1.11/operations/upgrade/). That means the Cilium pre-flight check will be installed and some checks are executed before the update actually takes place. Have a look at `tasks/upgrade.yml` to see what's happening before, during and after the update. Of course you should consult [Cilium upgrade guide](https://docs.cilium.io/en/v1.11/operations/upgrade/) in general to check for major changes and stuff like that before upgrading. [Roll back](https://docs.cilium.io/en/v1.11/operations/upgrade/#step-3-rolling-back) is currently not implemented but can be easily done via `kubectl` as described in the upgrade document.
 
-Before doing the upgrade you basically only need to change `cilium_chart_version` variable e.g. from `1.9.7` to `1.10.1` to upgrade from `1.9.7` to `1.10.1`. So to do the update run
+Before doing the upgrade you basically only need to change `cilium_chart_version` variable e.g. from `1.10.10` to `1.11.4` to upgrade from `1.10.10` to `1.11.4`. So to do the update run
 
 ```
 ansible-playbook --tags=role-cilium-kubernetes --extra-vars action=upgrade k8s.yml
