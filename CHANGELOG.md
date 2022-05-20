@@ -1,6 +1,10 @@
 Changelog
 ---------
 
+**6.0.3+1.11.5**
+
+- upgrade to Cilium v1.11.5
+
 **6.0.2+1.11.4**
 
 - upgrade to Cilium v1.11.4
