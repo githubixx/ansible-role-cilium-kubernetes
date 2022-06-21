@@ -20,7 +20,7 @@ Role Variables
 
 ```
 # Helm chart version
-cilium_chart_version: "1.11.5"
+cilium_chart_version: "1.11.6"
 
 # Helm chart name
 cilium_chart_name: "cilium"
