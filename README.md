@@ -131,7 +131,7 @@ And finally if you want to get rid of Cilium you can delete all resources again:
 ansible-playbook --tags=role-cilium-kubernetes --extra-vars action=delete k8s.yml
 ```
 
-If you don't have any CNI plugins configured this will cause `kublet` process on the Kubernetes worker nodes to issue CNI errors every now and then because there is no CNI related stuff anymore and of course connectivity between pods on different hosts will be gone together with any network policies and stuff like that.
+If you don't have any CNI plugins configured this will cause `kubelet` process on the Kubernetes worker nodes to issue CNI errors every now and then because there is no CNI related stuff anymore and of course connectivity between pods on different hosts will be gone together with any network policies and stuff like that.
 
 Example Playbook
 ----------------
