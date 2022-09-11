@@ -36,7 +36,7 @@
         path: "/etc/systemd/system/sys-fs-bpf.mount"
         state: absent
       notify:
-        - reload systemd
+        - Reload systemd
   when:
     - ansible_lsb.release is defined
     - ansible_lsb.release is version('20.04', '<')

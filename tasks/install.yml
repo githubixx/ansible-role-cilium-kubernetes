@@ -20,7 +20,7 @@
         owner: root
         group: root
       notify:
-        - reload systemd
+        - Reload systemd
 
     - name: Enable and mount BPFFSS
       ansible.builtin.service:
