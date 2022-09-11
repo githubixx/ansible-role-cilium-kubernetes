@@ -1,6 +1,6 @@
 ---
 - name: Ensure Cilium etcd secrets in k8s
-  k8s:
+  kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'etcd-secrets.yml.j2') }}"
     namespace: "{{ cilium_namespace }}"
@@ -9,7 +9,7 @@
   when: cilium_etcd_secrets_name is defined
 
 - name: Update Helm repo
-  shell:  # noqa 301
+  ansible.builtin.shell:  # noqa 301
     set -o errexit
     set -o pipefail
     set -o nounset
@@ -23,7 +23,7 @@
     executable: "/bin/bash"
 
 - name: Fetch current Cilium DaemonSet information
-  k8s_info:
+  kubernetes.core.k8s_info:
     api_version: v1
     kind: DaemonSet
     name: "{{ cilium_release_name }}"
@@ -33,7 +33,7 @@
   delegate_to: 127.0.0.1
 
 - name: Register current Cilium pods running
-  set_fact:
+  ansible.builtin.set_fact:
     cilium_pods_running="{{ cilium_daemonset | json_query(query) }}"
   vars:
     query: "resources[0].status.numberReady"
@@ -41,7 +41,7 @@
   delegate_to: 127.0.0.1
 
 - name: Fetch information if there is a Cilium pre-flight check deployment leftover
-  k8s_info:
+  kubernetes.core.k8s_info:
     api_version: v1
     kind: Deployment
     name: cilium-pre-flight-check
@@ -51,7 +51,7 @@
   delegate_to: 127.0.0.1
 
 - name: Register if there is a Cilium pre-flight check deployment leftover
-  set_fact:
+  ansible.builtin.set_fact:
     cilium_pre_flight_check_leftover="{{ cilium_pre_flight_check_deployment | json_query(query) }}"
   vars:
     query: "resources[0].metadata.name"
@@ -59,7 +59,7 @@
   delegate_to: 127.0.0.1
 
 - name: Delete Cilium pre-flight check leftover
-  shell:
+  ansible.builtin.shell:
     set -o errexit
     set -o pipefail
     set -o nounset
@@ -76,14 +76,14 @@
     executable: "/bin/bash"
 
 - name: Give Kubernetes 30 secs to delete Cilium pre-flight check
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 30
   when: cilium_pre_flight_check_leftover.find("cilium-pre-flight-check") != -1
   run_once: true
   delegate_to: 127.0.0.1
 
 - name: Install Cilium pre-flight check
-  shell:  # noqa 301
+  ansible.builtin.shell:  # noqa 301
     set -o errexit
     set -o pipefail
     set -o nounset
@@ -101,10 +101,11 @@
     executable: "/bin/bash"
 
 - name: Waiting for pre flight check to be deployed
-  include_tasks: 'pre_flight_check.yml'
+  ansible.builtin.include_tasks:
+    - pre_flight_check.yml
 
 - name: Fetch Cilium pre flight deployment information
-  k8s_info:
+  kubernetes.core.k8s_info:
     api_version: v1
     kind: Deployment
     name: cilium-pre-flight-check
@@ -114,7 +115,7 @@
   delegate_to: 127.0.0.1
 
 - name: Register Cilium pre flight ready replicas
-  set_fact:
+  ansible.builtin.set_fact:
     cilium_pre_flight_ready_replicas="{{ cilium_pre_flight_deployment | json_query(query) }}"
   vars:
     query: "resources[0].status.readyReplicas"
@@ -122,7 +123,7 @@
   delegate_to: 127.0.0.1
 
 - name: Register Cilium pre flight replicas
-  set_fact:
+  ansible.builtin.set_fact:
     cilium_pre_flight_replicas="{{ cilium_pre_flight_deployment | json_query(query) }}"
   vars:
     query: "resources[0].status.replicas"
@@ -130,14 +131,14 @@
   delegate_to: 127.0.0.1
 
 - name: Check replica count == ready replicas
-  fail:
+  ansible.builtin.fail:
     msg: "Replica count ({{ cilium_pre_flight_replicas }}) != ready replicas count ({{ cilium_pre_flight_ready_replicas }})"
   when: cilium_pre_flight_replicas|int != cilium_pre_flight_ready_replicas|int
   run_once: true
   delegate_to: 127.0.0.1
 
 - name: Delete Cilium pre flight via Helm
-  shell:
+  ansible.builtin.shell:
     set -o errexit
     set -o pipefail
     set -o nounset
@@ -155,7 +156,7 @@
 - name: Upgrade Cilium via Helm
   block:
     - name: Create temporary file for Helm values
-      tempfile:
+      ansible.builtin.tempfile:
         state: file
         suffix: cilium_values
       delegate_to: 127.0.0.1
@@ -163,7 +164,7 @@
       register: cilium_values_tmp_file
 
     - name: Select values file for Helm template
-      template:
+      ansible.builtin.template:
         src: "{{ lookup('first_found', params) }}"
         dest: "{{ cilium_values_tmp_file.path }}"
       delegate_to: 127.0.0.1
@@ -177,7 +178,7 @@
             - templates
 
     - name: Install Cilium
-      shell:
+      ansible.builtin.shell:
         set -o errexit
         set -o pipefail
         set -o nounset
@@ -194,7 +195,7 @@
         executable: "/bin/bash"
 
     - name: Delete temporary file for Helm values
-      file:
+      ansible.builtin.file:
         path: "{{ cilium_values_tmp_file.path }}"
         state: absent
       run_once: true
@@ -203,7 +204,7 @@
 
   rescue:
     - name: Delete temporary file for Helm values
-      file:
+      ansible.builtin.file:
         path: "{{ cilium_values_tmp_file.path }}"
         state: absent
       run_once: true

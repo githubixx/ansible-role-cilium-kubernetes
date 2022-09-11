@@ -1,6 +1,6 @@
 ---
 - name: Delete Cilium resources via Helm
-  shell:  # noqa 301
+  ansible.builtin.shell:  # noqa 301
     set -o errexit
     set -o pipefail
     set -o nounset
@@ -14,7 +14,7 @@
     executable: "/bin/bash"
 
 - name: Delete Cilium etcd secrets in k8s
-  k8s:
+  kubernetes.core.k8s:
     state: absent
     definition: "{{ lookup('template', 'etcd-secrets.yml.j2') }}"
     namespace: "{{ cilium_namespace }}"
@@ -25,13 +25,13 @@
 - name: BPFFS handling for Ubuntu 18.04
   block:
     - name: Disable and umount BPFFS
-      service:
+      ansible.builtin.service:
         name: sys-fs-bpf.mount
         enabled: false
         state: stopped
 
     - name: Remove systemd unit file for mounting BPFFS
-      file:
+      ansible.builtin.file:
         path: "/etc/systemd/system/sys-fs-bpf.mount"
         state: absent
       notify:
@@ -41,7 +41,7 @@
     - ansible_lsb.release is version('20.04', '<')
 
 - name: Delete namespace used by Cilium
-  k8s:
+  kubernetes.core.k8s:
     name: "{{ cilium_namespace }}"
     api_version: v1
     kind: Namespace

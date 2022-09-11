@@ -1,6 +1,6 @@
 ---
 - name: Check if Helm command is installed locally
-  shell: hash helm  # noqa 305
+  ansible.builtin.shell: hash helm  # noqa 305
   delegate_to: 127.0.0.1
   run_once: true
   changed_when: false
@@ -8,13 +8,13 @@
     executable: "/bin/bash"
 
 - name: Set default action to only render template via Helm
-  set_fact:
+  ansible.builtin.set_fact:
     deploy_action: "template"
   delegate_to: 127.0.0.1
   run_once: true
 
 - name: Set action to install via Helm
-  set_fact:
+  ansible.builtin.set_fact:
     deploy_action: "install"
   delegate_to: 127.0.0.1
   run_once: true
@@ -23,7 +23,7 @@
     - '"install" in action'
 
 - name: Set action to upgrade via Helm
-  set_fact:
+  ansible.builtin.set_fact:
     deploy_action: "upgrade"
   delegate_to: 127.0.0.1
   run_once: true
@@ -32,7 +32,7 @@
     - '"upgrade" in action'
 
 - name: Set action to delete via Helm
-  set_fact:
+  ansible.builtin.set_fact:
     deploy_action: "delete"
   delegate_to: 127.0.0.1
   run_once: true
@@ -41,4 +41,5 @@
     - '"delete" in action'
 
 - name: Include tasks to execute requested action
-  include_tasks: "tasks/{{ deploy_action|lower }}.yml"
+  ansible.builtin.include_tasks:
+    - "tasks/{{ deploy_action|lower }}.yml"
