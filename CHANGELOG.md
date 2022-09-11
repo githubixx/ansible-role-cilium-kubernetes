@@ -1,6 +1,11 @@
 Changelog
 ---------
 
+**7.0.0+1.12.1**
+ 
+- upgrade to Cilium v1.12.1
+- add Github release action to push new release to Ansible Galaxy
+
 **6.0.4+1.11.6**
 
 - upgrade to Cilium v1.11.6
