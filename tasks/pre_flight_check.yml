@@ -2,7 +2,7 @@
   block:
     - name: Set the retry count
       ansible.builtin.set_fact:
-        retry_count: "{{ 0 if retry_count is undefined else retry_count|int + 1 }}"
+        retry_count: "{{ 0 if retry_count is undefined else retry_count | int + 1 }}"
       run_once: true
       delegate_to: 127.0.0.1
 
@@ -32,14 +32,14 @@
     - name: Checking if Cilium pre flight pod count == Cilium pod count
       ansible.builtin.fail:
         msg: "Pre flight count: {{ cilium_pre_flight_pods_running }} / Cilium count: {{ cilium_pods_running }}"
-      when: cilium_pre_flight_pods_running|int != cilium_pods_running|int
+      when: cilium_pre_flight_pods_running | int != cilium_pods_running | int
       run_once: true
       delegate_to: 127.0.0.1
   rescue:
     - name: Fail if retry count is reached
       ansible.builtin.fail:
         msg: Ended after 60 retries
-      when: retry_count|int == 60
+      when: retry_count | int == 60
       run_once: true
       delegate_to: 127.0.0.1
 

@@ -135,7 +135,7 @@
 - name: Check replica count == ready replicas
   ansible.builtin.fail:
     msg: "Replica count ({{ cilium_pre_flight_replicas }}) != ready replicas count ({{ cilium_pre_flight_ready_replicas }})"
-  when: cilium_pre_flight_replicas|int != cilium_pre_flight_ready_replicas|int
+  when: cilium_pre_flight_replicas | int != cilium_pre_flight_ready_replicas | int
   run_once: true
   delegate_to: 127.0.0.1
 
