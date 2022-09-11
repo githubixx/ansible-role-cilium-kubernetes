@@ -40,6 +40,7 @@
       run_once: true
       delegate_to: 127.0.0.1
       register: cilium_template
+      changed_when: false
       args:
         executable: "/bin/bash"
 
