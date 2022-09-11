@@ -83,6 +83,10 @@
       args:
         executable: "/bin/bash"
 
+    - name: Add BGP support
+      include_tasks: bgp_config.yml
+      when: cilium_bgp_enabled
+
     - name: Delete temporary file for Helm values
       ansible.builtin.file:
         path: "{{ cilium_values_tmp_file.path }}"
