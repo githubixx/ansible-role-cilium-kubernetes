@@ -169,6 +169,7 @@
       ansible.builtin.template:
         src: "{{ lookup('first_found', params) }}"
         dest: "{{ cilium_values_tmp_file.path }}"
+        mode: 0600
       delegate_to: 127.0.0.1
       run_once: true
       vars:
