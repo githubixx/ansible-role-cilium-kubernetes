@@ -1,6 +1,6 @@
 ---
 - name: Create namespace
-  k8s:
+  kubernetes.core.k8s:
     name: "{{ cilium_namespace }}"
     api_version: v1
     kind: Namespace
@@ -13,26 +13,26 @@
 - name: BPFFS handling for Ubuntu 18.04
   block:
     - name: Install systemd unit file for mounting BPFFS
-      copy:
+      ansible.builtin.copy:
         src: "files/etc/systemd/system/sys-fs-bpf.mount"
         dest: "/etc/systemd/system/sys-fs-bpf.mount"
         mode: 0644
         owner: root
         group: root
       notify:
-        - reload systemd
+        - Reload systemd
 
     - name: Enable and mount BPFFSS
-      service:
+      ansible.builtin.service:
         name: sys-fs-bpf.mount
         enabled: true
         state: started
   when:
-    - ansible_lsb.release is defined 
+    - ansible_lsb.release is defined
     - ansible_lsb.release is version('20.04', '<')
 
 - name: Install Cilium etcd secrets in k8s
-  k8s:
+  kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'etcd-secrets.yml.j2') }}"
     namespace: "{{ cilium_namespace }}"
@@ -43,7 +43,7 @@
 - name: Install Cilium via Helm
   block:
     - name: Create temporary file for Helm values
-      tempfile:
+      ansible.builtin.tempfile:
         state: file
         suffix: cilium_values
       delegate_to: 127.0.0.1
@@ -51,9 +51,10 @@
       register: cilium_values_tmp_file
 
     - name: Select values file for Helm template
-      template:
+      ansible.builtin.template:
         src: "{{ lookup('first_found', params) }}"
         dest: "{{ cilium_values_tmp_file.path }}"
+        mode: 0600
       delegate_to: 127.0.0.1
       run_once: true
       vars:
@@ -65,7 +66,7 @@
             - templates
 
     - name: Install Cilium
-      shell:
+      ansible.builtin.shell:
         set -o errexit
         set -o pipefail
         set -o nounset
@@ -78,11 +79,12 @@
         exit 0
       run_once: true
       delegate_to: 127.0.0.1
+      changed_when: false
       args:
         executable: "/bin/bash"
 
     - name: Delete temporary file for Helm values
-      file:
+      ansible.builtin.file:
         path: "{{ cilium_values_tmp_file.path }}"
         state: absent
       run_once: true
@@ -91,7 +93,7 @@
 
   rescue:
     - name: Delete temporary file for Helm values
-      file:
+      ansible.builtin.file:
         path: "{{ cilium_values_tmp_file.path }}"
         state: absent
       run_once: true

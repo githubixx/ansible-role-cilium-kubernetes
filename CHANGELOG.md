@@ -1,6 +1,10 @@
 Changelog
 ---------
 
+**7.1.0-1.12.1**
+
+- fix various ansible-lint issues
+
 **7.0.0+1.12.1**
  
 - upgrade to Cilium v1.12.1

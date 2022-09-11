@@ -4,7 +4,7 @@
 - name: Render values
   block:
     - name: Create temporary file for Helm values
-      tempfile:
+      ansible.builtin.tempfile:
         state: file
         suffix: cilium_values
       delegate_to: 127.0.0.1
@@ -12,9 +12,10 @@
       register: cilium_values_tmp_file
 
     - name: Select values file for Helm template
-      template:
+      ansible.builtin.template:
         src: "{{ lookup('first_found', params) }}"
         dest: "{{ cilium_values_tmp_file.path }}"
+        mode: 0600
       delegate_to: 127.0.0.1
       run_once: true
       vars:
@@ -26,7 +27,7 @@
             - templates
 
     - name: Render Cilium template
-      shell:
+      ansible.builtin.shell:
         set -o errexit
         set -o pipefail
         set -o nounset
@@ -40,11 +41,12 @@
       run_once: true
       delegate_to: 127.0.0.1
       register: cilium_template
+      changed_when: false
       args:
         executable: "/bin/bash"
 
     - name: Delete temporary file for Helm values
-      file:
+      ansible.builtin.file:
         path: "{{ cilium_values_tmp_file.path }}"
         state: absent
       run_once: true
@@ -52,7 +54,7 @@
       when: cilium_values_tmp_file.path is defined
 
     - name: Output rendered template
-      debug:
+      ansible.builtin.debug:
         msg: "{{ cilium_template.stdout }}"
       run_once: true
       delegate_to: 127.0.0.1
@@ -60,7 +62,7 @@
 
   rescue:
     - name: Delete temporary file for Helm values
-      file:
+      ansible.builtin.file:
         path: "{{ cilium_values_tmp_file.path }}"
         state: absent
       run_once: true

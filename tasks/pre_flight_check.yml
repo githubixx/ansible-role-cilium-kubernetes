@@ -1,18 +1,18 @@
 - name: Pre flight pod check
   block:
     - name: Set the retry count
-      set_fact:
-        retry_count: "{{ 0 if retry_count is undefined else retry_count|int + 1 }}"
+      ansible.builtin.set_fact:
+        retry_count: "{{ 0 if retry_count is undefined else retry_count | int + 1 }}"
       run_once: true
       delegate_to: 127.0.0.1
 
     - name: Waiting for pre flight deployment
-      wait_for:
+      ansible.builtin.wait_for:
         timeout: 10
       run_once: true
 
     - name: Fetch current Cilium pre flight DaemonSet state
-      k8s_info:
+      kubernetes.core.k8s_info:
         api_version: v1
         kind: DaemonSet
         name: cilium-pre-flight-check
@@ -22,7 +22,7 @@
       delegate_to: 127.0.0.1
 
     - name: Register current Cilium pre flight pods running
-      set_fact:
+      ansible.builtin.set_fact:
         cilium_pre_flight_pods_running="{{ cilium_pre_flight_check_daemonset | json_query(query) }}"
       vars:
         query: "resources[0].status.numberReady"
@@ -30,29 +30,31 @@
       delegate_to: 127.0.0.1
 
     - name: Checking if Cilium pre flight pod count == Cilium pod count
-      fail:
+      ansible.builtin.fail:
         msg: "Pre flight count: {{ cilium_pre_flight_pods_running }} / Cilium count: {{ cilium_pods_running }}"
-      when: cilium_pre_flight_pods_running|int != cilium_pods_running|int
+      when: cilium_pre_flight_pods_running | int != cilium_pods_running | int
       run_once: true
       delegate_to: 127.0.0.1
   rescue:
     - name: Fail if retry count is reached
-      fail:
+      ansible.builtin.fail:
         msg: Ended after 60 retries
-      when: retry_count|int == 60
+      when: retry_count | int == 60
       run_once: true
       delegate_to: 127.0.0.1
 
     - name: Preflight waiting loop
-      debug:
+      ansible.builtin.debug:
         msg: "Waiting for Cilium pre flight pods starting up..."
       run_once: true
       delegate_to: 127.0.0.1
 
     - name: Sleeping
-      wait_for:
+      ansible.builtin.wait_for:
         timeout: 10
       run_once: true
       delegate_to: 127.0.0.1
 
-    - include_tasks: pre_flight_check.yml
+    - name: Include pre flight checks
+      ansible.builtin.include_tasks:
+        file: pre_flight_check.yml
