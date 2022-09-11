@@ -1,3 +1,4 @@
 ---
 - name: reload systemd
-  ansible.builtin.command: systemctl daemon-reload  # noqa 303
+  systemd:
+    daemon_reload: true
