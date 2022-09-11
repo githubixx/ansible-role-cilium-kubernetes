@@ -57,4 +57,4 @@
 
     - name: Include pre flight checks
       ansible.builtin.include_tasks:
-        - pre_flight_check.yml
+        file: pre_flight_check.yml

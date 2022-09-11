@@ -104,7 +104,7 @@
 
 - name: Waiting for pre flight check to be deployed
   ansible.builtin.include_tasks:
-    - pre_flight_check.yml
+    file: pre_flight_check.yml
 
 - name: Fetch Cilium pre flight deployment information
   kubernetes.core.k8s_info:
