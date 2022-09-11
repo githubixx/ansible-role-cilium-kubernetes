@@ -1,6 +1,6 @@
 ---
 - name: Check if Helm command is installed locally
-  ansible.builtin.shell: hash helm  # noqa 305
+  ansible.builtin.shell: hash helm
   delegate_to: 127.0.0.1
   run_once: true
   changed_when: false
