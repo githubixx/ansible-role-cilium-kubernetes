@@ -1,7 +1,7 @@
 Changelog
 ---------
 
-**7.1.0-1.12.1**
+**7.1.0+1.12.1**
 
 - fix various ansible-lint issues
 
