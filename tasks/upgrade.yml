@@ -9,7 +9,7 @@
   when: cilium_etcd_secrets_name is defined
 
 - name: Update Helm repo
-  ansible.builtin.shell:  # noqa 301
+  ansible.builtin.shell:
     set -o errexit
     set -o pipefail
     set -o nounset
@@ -19,6 +19,7 @@
     exit 0
   run_once: true
   delegate_to: 127.0.0.1
+  changed_when: false
   args:
     executable: "/bin/bash"
 
@@ -83,7 +84,7 @@
   delegate_to: 127.0.0.1
 
 - name: Install Cilium pre-flight check
-  ansible.builtin.shell:  # noqa 301
+  ansible.builtin.shell:
     set -o errexit
     set -o pipefail
     set -o nounset
@@ -97,6 +98,7 @@
     exit 0
   run_once: true
   delegate_to: 127.0.0.1
+  changed_when: false
   args:
     executable: "/bin/bash"
 
