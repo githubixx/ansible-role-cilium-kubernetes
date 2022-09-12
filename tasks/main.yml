@@ -42,4 +42,4 @@
 
 - name: Include tasks to execute requested action
   ansible.builtin.include_tasks:
-    - "tasks/{{ deploy_action|lower }}.yml"
+    file: "tasks/{{ deploy_action | lower }}.yml"
