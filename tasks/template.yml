@@ -1,5 +1,7 @@
 ---
-- include_tasks: helm_repository.yml
+- name: Include Helm repository tasks
+  ansible.builtin.include_tasks:
+    file: helm_repository.yml
 
 - name: Render values
   block:

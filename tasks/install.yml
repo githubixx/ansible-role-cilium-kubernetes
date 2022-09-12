@@ -8,7 +8,9 @@
   delegate_to: 127.0.0.1
   run_once: true
 
-- include_tasks: helm_repository.yml
+- name: Include Helm repository tasks
+  ansible.builtin.include_tasks:
+    file: helm_repository.yml
 
 - name: BPFFS handling for Ubuntu 18.04
   block:
