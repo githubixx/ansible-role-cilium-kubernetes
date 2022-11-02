@@ -1,27 +1,15 @@
 ---
 - name: Ensure Cilium etcd secrets in k8s
+  when:
+    - cilium_etcd_enabled is defined
+    - cilium_etcd_enabled == "true"
+    - cilium_etcd_secrets_name is defined
   kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'etcd-secrets.yml.j2') }}"
     namespace: "{{ cilium_namespace }}"
-  delegate_to: 127.0.0.1
   run_once: true
-  when: cilium_etcd_secrets_name is defined
-
-- name: Update Helm repo
-  ansible.builtin.shell:
-    set -o errexit
-    set -o pipefail
-    set -o nounset
-
-    helm repo update
-
-    exit 0
-  run_once: true
-  delegate_to: 127.0.0.1
-  changed_when: false
-  args:
-    executable: "/bin/bash"
+  delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Fetch current Cilium DaemonSet information
   kubernetes.core.k8s_info:
@@ -29,17 +17,17 @@
     kind: DaemonSet
     name: "{{ cilium_release_name }}"
     namespace: "{{ cilium_namespace }}"
-  register: cilium_daemonset
+  register: cilium__daemonset
   run_once: true
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Register current Cilium pods running
   ansible.builtin.set_fact:
-    cilium_pods_running="{{ cilium_daemonset | json_query(query) }}"
+    cilium_pods_running: "{{ cilium__daemonset | json_query(query) }}"
   vars:
     query: "resources[0].status.numberReady"
   run_once: true
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Fetch information if there is a Cilium pre-flight check deployment leftover
   kubernetes.core.k8s_info:
@@ -47,60 +35,65 @@
     kind: Deployment
     name: cilium-pre-flight-check
     namespace: "{{ cilium_namespace }}"
-  register: cilium_pre_flight_check_deployment
+  register: cilium__pre_flight_check_deployment
   run_once: true
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Register if there is a Cilium pre-flight check deployment leftover
   ansible.builtin.set_fact:
-    cilium_pre_flight_check_leftover="{{ cilium_pre_flight_check_deployment | json_query(query) }}"
+    cilium_pre_flight_check_leftover: "{{ cilium__pre_flight_check_deployment | json_query(query) }}"
   vars:
     query: "resources[0].metadata.name"
   run_once: true
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Delete Cilium pre-flight check leftover
-  ansible.builtin.shell:
-    set -o errexit
-    set -o pipefail
-    set -o nounset
-
-    helm delete cilium-preflight
-      --namespace {{ cilium_namespace }}
-
-    exit 0
-  run_once: true
-  delegate_to: 127.0.0.1
+  when:
+    - cilium_pre_flight_check_leftover.find("cilium-pre-flight-check") != -1
+  kubernetes.core.helm:
+    name: "cilium-preflight"
+    release_namespace: "{{ cilium_namespace }}"
+    state: absent
   changed_when: false
-  when: cilium_pre_flight_check_leftover.find("cilium-pre-flight-check") != -1
-  args:
-    executable: "/bin/bash"
+  run_once: true
+  delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Give Kubernetes 30 secs to delete Cilium pre-flight check
+  when:
+    - cilium_pre_flight_check_leftover.find("cilium-pre-flight-check") != -1
   ansible.builtin.wait_for:
     timeout: 30
-  when: cilium_pre_flight_check_leftover.find("cilium-pre-flight-check") != -1
   run_once: true
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Install Cilium pre-flight check
-  ansible.builtin.shell:
-    set -o errexit
-    set -o pipefail
-    set -o nounset
-
-    helm install cilium-preflight {{ cilium_chart_name }} --version {{ cilium_chart_version }}
-      --namespace {{ cilium_namespace }}
-      --set preflight.enabled=true
-      --set agent=false
-      --set operator.enabled=false
-
-    exit 0
-  run_once: true
-  delegate_to: 127.0.0.1
+  kubernetes.core.helm:
+    name: "cilium-preflight"
+    chart_ref: "{{ cilium_chart_name }}"
+    chart_version: "{{ cilium_chart_version }}"
+    release_namespace: "{{ cilium_namespace }}"
+    create_namespace: false
+    update_repo_cache: true
+    values:
+      agent: false
+      preflight:
+        enabled: true
+      operator:
+        enabled: false
   changed_when: false
-  args:
-    executable: "/bin/bash"
+  run_once: true
+  delegate_to: "{{ cilium_delegate_to }}"
+  register: cilium__helm_pre_flight
+
+- name: Install Cilium pre-flight check (helm command executed)
+  when:
+    - cilium__helm_pre_flight is defined
+    - cilium__helm_pre_flight.command is defined
+    - cilium_helm_show_commands
+  ansible.builtin.debug:
+    var: cilium__helm_pre_flight.command
+  run_once: true
+  delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Waiting for pre flight check to be deployed
   ansible.builtin.include_tasks:
@@ -112,48 +105,53 @@
     kind: Deployment
     name: cilium-pre-flight-check
     namespace: "{{ cilium_namespace }}"
-  register: cilium_pre_flight_deployment
+  register: cilium__pre_flight_deployment
   run_once: true
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Register Cilium pre flight ready replicas
   ansible.builtin.set_fact:
-    cilium_pre_flight_ready_replicas="{{ cilium_pre_flight_deployment | json_query(query) }}"
+    cilium_pre_flight_ready_replicas: "{{ cilium__pre_flight_deployment | json_query(query) }}"
   vars:
     query: "resources[0].status.readyReplicas"
   run_once: true
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Register Cilium pre flight replicas
   ansible.builtin.set_fact:
-    cilium_pre_flight_replicas="{{ cilium_pre_flight_deployment | json_query(query) }}"
+    cilium_pre_flight_replicas: "{{ cilium__pre_flight_deployment | json_query(query) }}"
   vars:
     query: "resources[0].status.replicas"
   run_once: true
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Check replica count == ready replicas
+  when:
+    - cilium_pre_flight_replicas | int != cilium_pre_flight_ready_replicas | int
   ansible.builtin.fail:
     msg: "Replica count ({{ cilium_pre_flight_replicas }}) != ready replicas count ({{ cilium_pre_flight_ready_replicas }})"
-  when: cilium_pre_flight_replicas | int != cilium_pre_flight_ready_replicas | int
   run_once: true
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Delete Cilium pre flight via Helm
-  ansible.builtin.shell:
-    set -o errexit
-    set -o pipefail
-    set -o nounset
-
-    helm delete cilium-preflight
-      --namespace {{ cilium_namespace }}
-
-    exit 0
-  run_once: true
-  delegate_to: 127.0.0.1
+  kubernetes.core.helm:
+    name: "cilium-preflight"
+    release_namespace: "{{ cilium_namespace }}"
+    state: absent
   changed_when: false
-  args:
-    executable: "/bin/bash"
+  run_once: true
+  delegate_to: "{{ cilium_delegate_to }}"
+  register: cilium__helm_pre_flight_chart
+
+- name: Delete Cilium pre flight via Helm (helm command executed)
+  when:
+    - cilium__helm_pre_flight_chart is defined
+    - cilium__helm_pre_flight_chart.command is defined
+    - cilium_helm_show_commands
+  ansible.builtin.debug:
+    var: cilium__helm_pre_flight_chart.command
+  delegate_to: "{{ cilium_delegate_to }}"
+  run_once: true
 
 - name: Upgrade Cilium via Helm
   block:
@@ -161,17 +159,17 @@
       ansible.builtin.tempfile:
         state: file
         suffix: cilium_values
-      delegate_to: 127.0.0.1
       run_once: true
-      register: cilium_values_tmp_file
+      delegate_to: "{{ cilium_delegate_to }}"
+      register: cilium__values_tmp_file
 
     - name: Select values file for Helm template
       ansible.builtin.template:
         src: "{{ lookup('first_found', params) }}"
-        dest: "{{ cilium_values_tmp_file.path }}"
+        dest: "{{ cilium__values_tmp_file.path }}"
         mode: 0600
-      delegate_to: 127.0.0.1
       run_once: true
+      delegate_to: "{{ cilium_delegate_to }}"
       vars:
         params:
           files:
@@ -180,37 +178,48 @@
           paths:
             - templates
 
-    - name: Install Cilium
-      ansible.builtin.shell:
-        set -o errexit
-        set -o pipefail
-        set -o nounset
-
-        helm upgrade {{ cilium_release_name }} {{ cilium_chart_name }}
-        --namespace {{ cilium_namespace }}
-        --version {{ cilium_chart_version }}
-        --values {{ cilium_values_tmp_file.path }}
-
-        exit 0
+    - name: Upgrade Helm chart
+      kubernetes.core.helm:
+        name: "{{ cilium_release_name }}"
+        chart_ref: "{{ cilium_chart_name }}"
+        chart_version: "{{ cilium_chart_version }}"
+        release_namespace: "{{ cilium_namespace }}"
+        create_namespace: false
+        update_repo_cache: true
+        values_files:
+          - "{{ cilium__values_tmp_file.path }}"
       run_once: true
-      delegate_to: 127.0.0.1
+      delegate_to: "{{ cilium_delegate_to }}"
+      register: cilium__helm_upgrade_chart
+
+    - name: Upgrade Helm chart (helm command executed)
+      when:
+        - cilium__helm_upgrade_chart is defined
+        - cilium__helm_upgrade_chart.command is defined
+        - cilium_helm_show_commands
+      ansible.builtin.debug:
+        var: cilium__helm_upgrade_chart.command
       changed_when: false
-      args:
-        executable: "/bin/bash"
+      run_once: true
+      delegate_to: "{{ cilium_delegate_to }}"
 
     - name: Delete temporary file for Helm values
+      when:
+        - cilium__values_tmp_file.path is defined
       ansible.builtin.file:
-        path: "{{ cilium_values_tmp_file.path }}"
+        path: "{{ cilium__values_tmp_file.path }}"
         state: absent
+      changed_when: false
       run_once: true
-      delegate_to: 127.0.0.1
-      when: cilium_values_tmp_file.path is defined
+      delegate_to: "{{ cilium_delegate_to }}"
 
   rescue:
     - name: Delete temporary file for Helm values
+      when:
+        - cilium__values_tmp_file.path is defined
       ansible.builtin.file:
-        path: "{{ cilium_values_tmp_file.path }}"
+        path: "{{ cilium__values_tmp_file.path }}"
         state: absent
       run_once: true
-      delegate_to: 127.0.0.1
-      when: cilium_values_tmp_file.path is defined
+      delegate_to: "{{ cilium_delegate_to }}"
+      changed_when: false
