@@ -1,7 +1,7 @@
 ---
 - name: Check if Helm command is installed locally
   ansible.builtin.shell: hash helm
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
   changed_when: false
   args:
@@ -10,13 +10,13 @@
 - name: Set default action to only render template via Helm
   ansible.builtin.set_fact:
     deploy_action: "template"
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
 
 - name: Set action to install via Helm
   ansible.builtin.set_fact:
     deploy_action: "install"
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
   when:
     - action is defined
@@ -25,7 +25,7 @@
 - name: Set action to upgrade via Helm
   ansible.builtin.set_fact:
     deploy_action: "upgrade"
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
   when:
     - action is defined
@@ -34,7 +34,7 @@
 - name: Set action to delete via Helm
   ansible.builtin.set_fact:
     deploy_action: "delete"
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
   when:
     - action is defined

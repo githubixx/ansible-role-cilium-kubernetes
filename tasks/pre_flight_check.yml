@@ -1,10 +1,11 @@
+---
 - name: Pre flight pod check
   block:
     - name: Set the retry count
       ansible.builtin.set_fact:
         retry_count: "{{ 0 if retry_count is undefined else retry_count | int + 1 }}"
       run_once: true
-      delegate_to: 127.0.0.1
+      delegate_to: "{{ cilium_delegate_to }}"
 
     - name: Waiting for pre flight deployment
       ansible.builtin.wait_for:
@@ -19,41 +20,41 @@
         namespace: "{{ cilium_namespace }}"
       register: cilium_pre_flight_check_daemonset
       run_once: true
-      delegate_to: 127.0.0.1
+      delegate_to: "{{ cilium_delegate_to }}"
 
     - name: Register current Cilium pre flight pods running
       ansible.builtin.set_fact:
-        cilium_pre_flight_pods_running="{{ cilium_pre_flight_check_daemonset | json_query(query) }}"
+        cilium_pre_flight_pods_running: "{{ cilium_pre_flight_check_daemonset | json_query(query) }}"
       vars:
         query: "resources[0].status.numberReady"
       run_once: true
-      delegate_to: 127.0.0.1
+      delegate_to: "{{ cilium_delegate_to }}"
 
     - name: Checking if Cilium pre flight pod count == Cilium pod count
       ansible.builtin.fail:
         msg: "Pre flight count: {{ cilium_pre_flight_pods_running }} / Cilium count: {{ cilium_pods_running }}"
       when: cilium_pre_flight_pods_running | int != cilium_pods_running | int
       run_once: true
-      delegate_to: 127.0.0.1
+      delegate_to: "{{ cilium_delegate_to }}"
   rescue:
     - name: Fail if retry count is reached
       ansible.builtin.fail:
         msg: Ended after 60 retries
       when: retry_count | int == 60
       run_once: true
-      delegate_to: 127.0.0.1
+      delegate_to: "{{ cilium_delegate_to }}"
 
     - name: Preflight waiting loop
       ansible.builtin.debug:
         msg: "Waiting for Cilium pre flight pods starting up..."
       run_once: true
-      delegate_to: 127.0.0.1
+      delegate_to: "{{ cilium_delegate_to }}"
 
     - name: Sleeping
       ansible.builtin.wait_for:
         timeout: 10
       run_once: true
-      delegate_to: 127.0.0.1
+      delegate_to: "{{ cilium_delegate_to }}"
 
     - name: Include pre flight checks
       ansible.builtin.include_tasks:

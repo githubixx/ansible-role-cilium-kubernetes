@@ -9,16 +9,16 @@
       ansible.builtin.tempfile:
         state: file
         suffix: cilium_values
-      delegate_to: 127.0.0.1
+      delegate_to: "{{ cilium_delegate_to }}"
       run_once: true
-      register: cilium_values_tmp_file
+      register: cilium__values_tmp_file
 
     - name: Select values file for Helm template
       ansible.builtin.template:
         src: "{{ lookup('first_found', params) }}"
-        dest: "{{ cilium_values_tmp_file.path }}"
+        dest: "{{ cilium__values_tmp_file.path }}"
         mode: 0600
-      delegate_to: 127.0.0.1
+      delegate_to: "{{ cilium_delegate_to }}"
       run_once: true
       vars:
         params:
@@ -28,45 +28,57 @@
           paths:
             - templates
 
-    - name: Render Cilium template
-      ansible.builtin.shell:
-        set -o errexit
-        set -o pipefail
-        set -o nounset
+    - name: Render template
+      kubernetes.core.helm_template:
+        chart_ref: "{{ cilium_chart_name }}"
+        chart_version: "{{ cilium_chart_version }}"
+        release_namespace: "{{ cilium_namespace }}"
+        update_repo_cache: true
+        values_files:
+          - "{{ cilium__values_tmp_file.path }}"
+      run_once: true
+      delegate_to: "{{ cilium_delegate_to }}"
+      register: cilium__template
 
-        helm template {{ cilium_release_name }} {{ cilium_chart_name }}
-        --namespace {{ cilium_namespace }}
-        --version {{ cilium_chart_version }}
-        --values {{ cilium_values_tmp_file.path }}
+    - name: Render template (helm command executed)
+      when:
+        - cilium__template is defined
+        - cilium__template.command is defined
+        - cilium_helm_show_commands
+      ansible.builtin.debug:
+        var: cilium__template.command
+      delegate_to: "{{ cilium_delegate_to }}"
+      run_once: true
 
-        exit 0
+    - name: Create directory to store template.yml
+      ansible.builtin.file:
+        dest: "{{ cilium_template_output_directory }}"
+        state: directory
+        mode: 0755
       run_once: true
       delegate_to: 127.0.0.1
-      register: cilium_template
-      changed_when: false
-      args:
-        executable: "/bin/bash"
+
+    - name: Write templates to file
+      ansible.builtin.copy:
+        dest: "{{ cilium_template_output_directory }}/template.yml"
+        content: "{{ cilium__template.stdout }}"
+        mode: 0644
+      run_once: true
+      delegate_to: 127.0.0.1
 
     - name: Delete temporary file for Helm values
+      when: cilium__values_tmp_file.path is defined
       ansible.builtin.file:
-        path: "{{ cilium_values_tmp_file.path }}"
+        path: "{{ cilium__values_tmp_file.path }}"
         state: absent
       run_once: true
-      delegate_to: 127.0.0.1
-      when: cilium_values_tmp_file.path is defined
-
-    - name: Output rendered template
-      ansible.builtin.debug:
-        msg: "{{ cilium_template.stdout }}"
-      run_once: true
-      delegate_to: 127.0.0.1
-      changed_when: false
+      delegate_to: "{{ cilium_delegate_to }}"
 
   rescue:
     - name: Delete temporary file for Helm values
+      when: cilium__values_tmp_file.path is defined
       ansible.builtin.file:
-        path: "{{ cilium_values_tmp_file.path }}"
+        path: "{{ cilium__values_tmp_file.path }}"
         state: absent
       run_once: true
-      delegate_to: 127.0.0.1
-      when: cilium_values_tmp_file.path is defined
+      delegate_to: "{{ cilium_delegate_to }}"

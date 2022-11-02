@@ -1,17 +1,20 @@
 ---
-- name: Register if Cilium Helm repository is installed
-  ansible.builtin.command: helm search repo {{ cilium_repo_name }} -n {{ cilium_namespace }} --version ^{{ cilium_chart_version }} 2>/dev/null
-  register: cilium_repo_installed
-  changed_when: false
-  delegate_to: 127.0.0.1
+- name: Add Helm repository
+  when:
+    - cilium__helm_repo_installed.status is not defined
+  kubernetes.core.helm_repository:
+    name: "{{ cilium_repo_name }}"
+    repo_url: "{{ cilium_chart_url }}"
+  delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
-  ignore_errors: true
+  register: cilium__helm_add_repo
 
-- name: Add cilium helm repository
-  ansible.builtin.command: helm repo add {{ cilium_repo_name }} {{ cilium_chart_url }}
-  changed_when: false
-  delegate_to: 127.0.0.1
+- name: Add Helm repository (helm command executed)
+  when:
+    - cilium__helm_add_repo is defined
+    - cilium__helm_add_repo.command is defined
+    - cilium_helm_show_commands
+  ansible.builtin.debug:
+    var: cilium__helm_add_repo.command
+  delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
-  when: |
-    cilium_repo_installed.failed or
-    cilium_repo_installed.stdout.find(cilium_repo_name) == -1
