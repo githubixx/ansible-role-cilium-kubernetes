@@ -1,0 +1,39 @@
+---
+# Copyright (C) 2022 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: Verify setup
+  hosts: all
+  tasks:
+    - name: Fetch Cilium DaemonSet information
+      k8s_info:
+        api_version: v1
+        kind: DaemonSet
+        name: cilium
+        namespace: cilium
+      register: cilium__daemonset_info
+
+    - name: Print DaemonSet JSON blob
+      ansible.builtin.debug:
+        var: cilium__daemonset_info
+      when: ansible_verbosity > 1
+
+    - name: There should be a DaemonSet called cilium
+      ansible.builtin.assert:
+        that:
+          - cilium__daemonset_info.resources[0].metadata.name == "cilium"
+
+    - name: There should be at least one Cilium pod running
+      ansible.builtin.assert:
+        that:
+          - (cilium__daemonset_info.resources[0].status.numberReady | default(0) | int ) >= 1
+
+    - name: Fetch Cilium status
+      ansible.builtin.command:
+        cmd: cilium -n cilium status
+      register: cilium__status
+
+    - name: Print Cilium status output
+      ansible.builtin.debug:
+        var: cilium__status.stdout
+      when: ansible_verbosity > 1

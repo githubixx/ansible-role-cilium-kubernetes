@@ -1,0 +1,69 @@
+---
+# Copyright (C) 2022 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- hosts: ubuntu
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Update APT package cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install support packages
+      ansible.builtin.package:
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+          - conntrack
+          - python3-pip
+
+    - name: Install kubernetes Python package
+      ansible.builtin.pip:
+        name: kubernetes
+        state: present
+
+    - name: Install Docker
+      ansible.builtin.include_role:
+        name: githubixx.docker
+
+    - name: Install containerd
+      ansible.builtin.include_role:
+        name: githubixx.containerd
+
+    - name: Install Helm role
+      ansible.builtin.include_role:
+        name: gantsign.helm
+
+    - name: Install kubectl role
+      ansible.builtin.include_role:
+        name: githubixx.kubectl
+
+    - name: Install Cilium CLI role
+      ansible.builtin.include_role:
+        name: githubixx.cilium_cli
+
+    - name: Install minikube role
+      ansible.builtin.include_role:
+        name: darkwizard242.minikube
+
+    - name: Add user vagrant to docker group
+      ansible.builtin.user:
+        name: vagrant
+        groups: docker
+        append: true
+
+    - name: Reset SSH connection
+      meta: reset_connection
+
+- hosts: ubuntu
+  tasks:
+    - name: Start minikube (could take some time as K8s binaries needs to be downloaded first)
+      ansible.builtin.command:
+        cmd: minikube start --driver=docker --container-runtime=containerd --network-plugin=cni --nodes 3 --install-addons=false
+
+    - name: Delete kindnet DaemonSet
+      ansible.builtin.command:
+        cmd: kubectl -n kube-system delete ds kindnet

@@ -1,0 +1,9 @@
+---
+# Copyright (C) 2022 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- hosts: all
+  tasks:
+    - name: Include Cilium role
+      ansible.builtin.include_role:
+        name: githubixx.cilium_kubernetes
