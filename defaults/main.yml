@@ -1,6 +1,6 @@
 ---
-# Helm chart version (uses Cilium v1.12.1)
-cilium_chart_version: "1.12.1"
+# Helm chart version (uses Cilium v1.12.3)
+cilium_chart_version: "1.12.3"
 
 # Helm release name
 cilium_release_name: "cilium"
@@ -17,7 +17,6 @@ cilium_chart_url: "https://helm.cilium.io/"
 # Kubernetes namespace where Cilium resources should be installed
 cilium_namespace: "cilium"
 
-#
 # etcd settings. If "cilium_etcd_enabled" variable is defined and set to "true",
 # Cilium etcd settings are generated and deployed. Otherwise all the following
 # "cilium_etcd_*" settings are ignored.
@@ -72,3 +71,19 @@ cilium_etcd_certfile: "cert-cilium.pem"
 
 # etcd certificate key file (file will be fetched in "cilium_etcd_cert_directory")
 cilium_etcd_keyfile: "cert-cilium-key.pem"
+
+# By default all tasks that needs to communicate with the Kubernetes
+# cluster are executed on your local host (127.0.0.1). But if that one
+# doesn't have direct connection to this cluster or should be executed
+# elsewhere this variable can be changed accordingly.
+cilium_delegate_to: 127.0.0.1
+
+# Shows the "helm" command that was executed if a task uses Helm to
+# install, update/upgrade or deletes such a resource.
+cilium_helm_show_commands: false
+
+# Without "action" variable defined this role will only render a file
+# with all the resources that will be installed or upgraded. The rendered
+# file with the resources will be called "template.yml" and will be
+# placed in the directory specified below.
+cilium_template_output_directory: "{{ '~/cilium/template' | expanduser }}"
