@@ -1,29 +1,37 @@
 ---
-- name: Delete Cilium resources via Helm
-  ansible.builtin.shell:
-    set -o errexit
-    set -o pipefail
-    set -o nounset
-
-    helm uninstall {{ cilium_release_name }} --namespace {{ cilium_namespace }}
-
-    exit 0
+- name: Uninstall release via Helm
+  kubernetes.core.helm:
+    name: "{{ cilium_release_name }}"
+    release_namespace: "{{ cilium_namespace }}"
+    state: absent
   run_once: true
-  delegate_to: 127.0.0.1
-  changed_when: false
-  args:
-    executable: "/bin/bash"
+  delegate_to: "{{ cilium_delegate_to }}"
+  register: cilium__helm_show_uninstall_release
+
+- name: Uninstall release via Helm (helm command executed)
+  when:
+    - cilium__helm_show_uninstall_release is defined
+    - cilium__helm_show_uninstall_release.command is defined
+    - cilium_helm_show_commands
+  ansible.builtin.debug:
+    var: cilium__helm_show_uninstall_release.command
+  delegate_to: "{{ cilium_delegate_to }}"
+  run_once: true
 
 - name: Delete Cilium etcd secrets in k8s
   kubernetes.core.k8s:
     state: absent
-    definition: "{{ lookup('template', 'etcd-secrets.yml.j2') }}"
+    name: "{{ cilium_etcd_secrets_name }}"
     namespace: "{{ cilium_namespace }}"
-  delegate_to: 127.0.0.1
+    api_version: v1
+    kind: Secret
+  delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
-  when: cilium_etcd_secrets_name is defined
 
 - name: BPFFS handling for Ubuntu 18.04
+  when:
+    - ansible_lsb.release is defined
+    - ansible_lsb.release is version('20.04', '<')
   block:
     - name: Disable and umount BPFFS
       ansible.builtin.service:
@@ -37,9 +45,6 @@
         state: absent
       notify:
         - Reload systemd
-  when:
-    - ansible_lsb.release is defined
-    - ansible_lsb.release is version('20.04', '<')
 
 - name: Delete namespace used by Cilium
   kubernetes.core.k8s:
@@ -47,5 +52,5 @@
     api_version: v1
     kind: Namespace
     state: absent
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
