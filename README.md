@@ -6,12 +6,20 @@ This Ansible role installs [Cilium](https://docs.cilium.io) network on a Kuberne
 Versions
 --------
 
-I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `6.0.2+1.11.4` means this is release `6.0.2` of this role and it contains Cilium chart version `1.11.4`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
+I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `8.0.0+1.12.3` means this is release `8.0.0` of this role and it contains Cilium chart version `1.12.3`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
 
 Requirements
 ------------
 
-You need to have [Helm 3](https://helm.sh/) binary installed on that host where `ansible-playbook` runs. You can either try to use your favourite package manager if your distribution includes `helm` in its repository or use one of the Ansible `Helm` roles (e.g. https://galaxy.ansible.com/gantsign/helm) or directly download the binary from https://github.com/helm/helm/releases and put it into `/usr/local/bin/` directory e.g. For Archlinux Helm can be installed via `sudo pacman -S helm` e.g.
+You need to have [Helm 3](https://helm.sh/) binary installed on that host where `ansible-playbook` is executed or on that host where you delegated the playbooks to (e.g. by using `cilium_delegate_to` variable). You can either
+
+- use your favorite package manager if your distribution includes `helm` in its repository (for Archlinux use `sudo pacman -S helm` e.g.)
+- or use one of the Ansible `Helm` roles (e.g. [helm](https://galaxy.ansible.com/gantsign/helm) - which gets also installed if you use `ansible-galaxy role install -vr requirements.yml`
+- or directly download the binary from [Helm releases)[https://github.com/helm/helm/releases]) and put it into `/usr/local/bin/` directory e.g.
+
+A properly configured `KUBECONFIG` is also needed (which is located at `${HOME}/.kube/config` by default). Normally if `kubectl` works with your cluster then everything should be already fine in this regards.
+
+Additionally the Ansible `kubernetes.core` collection needs to be installed. This can be done by using the `collections.yml` file included in this role: `ansible-galaxy install -r collections.yml`.
 
 And of course you need a Kubernetes Cluster ;-)
 
@@ -20,7 +28,7 @@ Role Variables
 
 ```
 # Helm chart version
-cilium_chart_version: "1.12.1"
+cilium_chart_version: "1.12.3"
 
 # Helm chart name
 cilium_chart_name: "cilium"
@@ -31,7 +39,6 @@ cilium_chart_url: "https://helm.cilium.io/"
 # Kubernetes namespace where Cilium resources should be installed
 cilium_namespace: "cilium"
 
-#
 # etcd settings. If "cilium_etcd_enabled" variable is defined and set to "true",
 # Cilium etcd settings are generated and deployed. Otherwise all the following
 # "cilium_etcd_*" settings are ignored.
@@ -86,6 +93,22 @@ cilium_etcd_certfile: "cert-cilium.pem"
 
 # etcd certificate key file (file will be fetched in "cilium_etcd_cert_directory")
 cilium_etcd_keyfile: "cert-cilium-key.pem"
+
+# By default all tasks that needs to communicate with the Kubernetes
+# cluster are executed on your local host (127.0.0.1). But if that one
+# doesn't have direct connection to this cluster or should be executed
+# elsewhere this variable can be changed accordingly. 
+cilium_delegate_to: 127.0.0.1
+
+# Shows the "helm" command that was executed if a task uses Helm to
+# install, update/upgrade or deletes such a resource.
+cilium_helm_show_commands: false
+
+# Without "action" variable defined this role will only render a file
+# with all the resources that will be installed or upgraded. The rendered
+# file with the resources will be called "template.yml" and will be
+# placed in the directory specified below.
+cilium_template_output_directory: "{{ '~/cilium/template' | expanduser }}"
 ```
 
 Usage:
@@ -97,7 +120,7 @@ The `templates/cilium_values_default.yml.j2` template also contains some `if` cl
 
 But nothing is made in stone ;-) To use your own values just create a file called `cilium_values_user.yml.j2` and put it into the `templates` directory. Then this Cilium role will use that file to render the Helm values. You can use `templates/cilium_values_default.yml.j2` as a template or just start from scratch. As mentioned above you can modify all settings for the Cilium Helm chart that are different to the default ones which are located [here](https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml).
 
-After the values file (`templates/cilium_values_default.yml.j2` or `templates/cilium_values_user.yml.j2`) is in place and the `defaults/main.yml` values are checked the role can be installed. Most of the role's tasks are executed locally so to say as quite a few tasks need to communicate with the Kubernetes API server or executing [Helm](https://helm.sh/) commands and it makes no sense to execute them on the `etcd` or Kubernetes worker nodes of course.
+After the values file (`templates/cilium_values_default.yml.j2` or `templates/cilium_values_user.yml.j2`) is in place and the `defaults/main.yml` values are checked the role can be installed. Most of the role's tasks are executed locally by default so to say as quite a few tasks need to communicate with the Kubernetes API server or executing [Helm](https://helm.sh/) commands. But you can delegate this kind of tasks to a different host by using `cilium_delegate_to` variable (see above).
 
 The default action is to just render the Kubernetes resources YAML file after replacing all Jinja2 variables and stuff like that. In the `Example Playbook` section below there is an `Example 2 (assign tag to role)`. The role `githubixx.cilium-kubernetes` has a tag `role-cilium-kubernetes` assigned. Assuming that the values for the Helm chart should be rendered (nothing will be installed in this case) and the playbook is called `k8s.yml` execute the following command:
 
@@ -105,7 +128,15 @@ The default action is to just render the Kubernetes resources YAML file after re
 ansible-playbook --tags=role-cilium-kubernetes k8s.yml
 ```
 
-One of the final tasks is called `TASK [githubixx.cilium-kubernetes : Output rendered template]`. This allows to check the YAML file before Cilium gets deployed. As you might figure out the output isn't that "pretty". To get around this you can either set `ANSIBLE_STDOUT_CALLBACK=debug` environment variable or `stdout_callback = debug` in `ansible.cfg`. If you run the `ansible-playbook` command again now the YAML output should now look way better.
+To render the template into a different directory use `cilium_template_output_directory` variable e.g.:
+
+```bash
+ansible-playbook --tags=role-cilium-kubernetes --extra-vars cilium_template_output_directory="/tmp/cilium" k8s.yml
+```
+
+If you want to see the `helm` commands and the parameters which were executed in the logs you can also specify `--extra-vars cilium_helm_show_commands=true`.
+
+One of the final tasks is called `TASK [githubixx.cilium_kubernetes : Write templates to file]`. This renders the template with the resources that will be created into the directory specified in `cilium_template_output_directory`. The file will be called `template.yml`. The directory/file will be placed on your local machine to be able to inspect it.
 
 If the rendered output contains everything you need the role can be installed which finally deploys Cilium:
 
@@ -115,7 +146,7 @@ ansible-playbook --tags=role-cilium-kubernetes --extra-vars action=install k8s.y
 
 To check if everything was deployed use the usual `kubectl` commands like `kubectl -n <cilium_namespace> get pods -o wide`.
 
-As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/months the role also can do upgrades. The role basically executes what is described in [Cilium upgrade guide](https://docs.cilium.io/en/v1.11/operations/upgrade/). That means the Cilium pre-flight check will be installed and some checks are executed before the update actually takes place. Have a look at `tasks/upgrade.yml` to see what's happening before, during and after the update. Of course you should consult [Cilium upgrade guide](https://docs.cilium.io/en/v1.11/operations/upgrade/) in general to check for major changes and stuff like that before upgrading. [Roll back](https://docs.cilium.io/en/v1.11/operations/upgrade/#step-3-rolling-back) is currently not implemented but can be easily done via `kubectl` as described in the upgrade document.
+As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/months the role also can do upgrades. The role basically executes what is described in [Cilium upgrade guide](https://docs.cilium.io/en/v1.12/operations/upgrade/). That means the Cilium pre-flight check will be installed and some checks are executed before the update actually takes place. Have a look at `tasks/upgrade.yml` to see what's happening before, during and after the update. Of course you should consult [Cilium upgrade guide](https://docs.cilium.io/en/v1.12/operations/upgrade/) in general to check for major changes and stuff like that before upgrading. [Roll back](https://docs.cilium.io/en/v1.12/operations/upgrade/#step-3-rolling-back) is currently not implemented but can be easily done via `kubectl` as described in the upgrade document.
 
 Before doing the upgrade you basically only need to change `cilium_chart_version` variable e.g. from `1.10.10` to `1.11.4` to upgrade from `1.10.10` to `1.11.4`. So to do the update run
 
@@ -151,6 +182,47 @@ Example 2 (assign tag to role):
     -
       role: githubixx.cilium-kubernetes
       tags: role-cilium-kubernetes
+```
+
+Testing
+-------
+
+This role has a small test setup that is created using [Molecule](https://github.com/ansible-community/molecule), libvirt (vagrant-libvirt) and QEMU/KVM. Please see my blog post [Testing Ansible roles with Molecule, libvirt (vagrant-libvirt) and QEMU/KVM](https://www.tauceti.blog/posts/testing-ansible-roles-with-molecule-libvirt-vagrant-qemu-kvm/) how to setup. The test configuration is [here](https://github.com/githubixx/ansible-role-cilium-kubernetes/tree/master/molecule/kvm).
+
+Afterwards molecule can be executed. The following command will do a basic setup and create a template of the resources (default action see above) that will be created:
+
+```bash
+molecule converge -s kvm
+```
+
+Installing `Cilium` and the required resources. This will setup a virtual machine (VM) and installs a minimal Kubernetes setup using `minikube`. That setup will be used to install `Cilium` by using this role.
+
+```bash
+molecule converge -s kvm -- --extra-vars action=install
+```
+
+Upgrading `Cilium` or changing parameters:
+
+```bash
+molecule converge -s kvm -- --extra-vars action=upgrade
+```
+
+Deleting `Cilium` and its resources:
+
+```bash
+molecule converge -s kvm -- --extra-vars action=delete
+```
+
+To run a few tests use
+
+```bash
+molecule verify -s kvm
+```
+
+To clean up run
+
+```bash
+molecule destroy -s kvm
 ```
 
 License
