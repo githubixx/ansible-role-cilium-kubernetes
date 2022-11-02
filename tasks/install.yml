@@ -5,7 +5,7 @@
     api_version: v1
     kind: Namespace
     state: present
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
 
 - name: Include Helm repository tasks
@@ -13,6 +13,9 @@
     file: helm_repository.yml
 
 - name: BPFFS handling for Ubuntu 18.04
+  when:
+    - ansible_lsb.release is defined
+    - ansible_lsb.release is version('20.04', '<')
   block:
     - name: Install systemd unit file for mounting BPFFS
       ansible.builtin.copy:
@@ -29,18 +32,18 @@
         name: sys-fs-bpf.mount
         enabled: true
         state: started
-  when:
-    - ansible_lsb.release is defined
-    - ansible_lsb.release is version('20.04', '<')
 
 - name: Install Cilium etcd secrets in k8s
+  when:
+    - cilium_etcd_enabled is defined
+    - cilium_etcd_enabled == "true"
+    - cilium_etcd_secrets_name is defined
   kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'etcd-secrets.yml.j2') }}"
     namespace: "{{ cilium_namespace }}"
-  delegate_to: 127.0.0.1
+  delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
-  when: cilium_etcd_secrets_name is defined
 
 - name: Install Cilium via Helm
   block:
@@ -48,16 +51,16 @@
       ansible.builtin.tempfile:
         state: file
         suffix: cilium_values
-      delegate_to: 127.0.0.1
+      delegate_to: "{{ cilium_delegate_to }}"
       run_once: true
-      register: cilium_values_tmp_file
+      register: cilium__values_tmp_file
 
     - name: Select values file for Helm template
       ansible.builtin.template:
         src: "{{ lookup('first_found', params) }}"
-        dest: "{{ cilium_values_tmp_file.path }}"
+        dest: "{{ cilium__values_tmp_file.path }}"
         mode: 0600
-      delegate_to: 127.0.0.1
+      delegate_to: "{{ cilium_delegate_to }}"
       run_once: true
       vars:
         params:
@@ -67,37 +70,43 @@
           paths:
             - templates
 
-    - name: Install Cilium
-      ansible.builtin.shell:
-        set -o errexit
-        set -o pipefail
-        set -o nounset
-
-        helm install {{ cilium_release_name }} {{ cilium_chart_name }}
-        --namespace {{ cilium_namespace }}
-        --version {{ cilium_chart_version }}
-        --values {{ cilium_values_tmp_file.path }}
-
-        exit 0
+    - name: Install chart
+      kubernetes.core.helm:
+        name: "{{ cilium_release_name }}"
+        chart_ref: "{{ cilium_chart_name }}"
+        chart_version: "{{ cilium_chart_version }}"
+        release_namespace: "{{ cilium_namespace }}"
+        create_namespace: false
+        update_repo_cache: true
+        values_files:
+          - "{{ cilium__values_tmp_file.path }}"
       run_once: true
-      delegate_to: 127.0.0.1
-      changed_when: false
-      args:
-        executable: "/bin/bash"
+      delegate_to: "{{ cilium_delegate_to }}"
+      register: cilium__helm_install_chart
+
+    - name: Install chart (helm command executed)
+      when:
+        - cilium__helm_install_chart is defined
+        - cilium__helm_install_chart.command is defined
+        - cilium_helm_show_commands
+      ansible.builtin.debug:
+        var: cilium__helm_install_chart.command
+      delegate_to: "{{ cilium_delegate_to }}"
+      run_once: true
 
     - name: Delete temporary file for Helm values
+      when: cilium__values_tmp_file.path is defined
       ansible.builtin.file:
-        path: "{{ cilium_values_tmp_file.path }}"
+        path: "{{ cilium__values_tmp_file.path }}"
         state: absent
       run_once: true
-      delegate_to: 127.0.0.1
-      when: cilium_values_tmp_file.path is defined
+      delegate_to: "{{ cilium_delegate_to }}"
 
   rescue:
     - name: Delete temporary file for Helm values
+      when: cilium__values_tmp_file.path is defined
       ansible.builtin.file:
-        path: "{{ cilium_values_tmp_file.path }}"
+        path: "{{ cilium__values_tmp_file.path }}"
         state: absent
       run_once: true
-      delegate_to: 127.0.0.1
-      when: cilium_values_tmp_file.path is defined
+      delegate_to: "{{ cilium_delegate_to }}"
