@@ -1,5 +1,5 @@
 ---
-- name: Check if Helm command is installed locally
+- name: Check if Helm command is installed
   ansible.builtin.shell: hash helm
   delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
