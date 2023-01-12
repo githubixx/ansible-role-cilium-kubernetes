@@ -26,7 +26,7 @@ And of course you need a Kubernetes Cluster ;-)
 Role Variables
 --------------
 
-```
+```yaml
 # Helm chart version
 cilium_chart_version: "1.12.3"
 
@@ -111,8 +111,8 @@ cilium_helm_show_commands: false
 cilium_template_output_directory: "{{ '~/cilium/template' | expanduser }}"
 ```
 
-Usage:
-------
+Usage
+-----
 
 The first thing to do is to check `templates/cilium_values_default.yml.j2`. This file contains the values/settings for the Cilium Helm chart that are different to the default ones which are located [here](https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml). The default values of this Ansible role are using a TLS enabled `etcd` cluster. If you have a self hosted/bare metal Kubernetes cluster chances are high that there is already running an `etcd` cluster for the Kubernetes API server which is the case for me. I'm using my Ansible [etcd role](https://github.com/githubixx/ansible-role-etcd) to install such an `etcd` cluster and my [Kubernetes Certificate Authority role](https://github.com/githubixx/ansible-role-kubernetes-ca) to generate the certificates. So if you used my roles you can use this Cilium role basically as is.
 
@@ -122,9 +122,9 @@ But nothing is made in stone ;-) To use your own values just create a file calle
 
 After the values file (`templates/cilium_values_default.yml.j2` or `templates/cilium_values_user.yml.j2`) is in place and the `defaults/main.yml` values are checked the role can be installed. Most of the role's tasks are executed locally by default so to say as quite a few tasks need to communicate with the Kubernetes API server or executing [Helm](https://helm.sh/) commands. But you can delegate this kind of tasks to a different host by using `cilium_delegate_to` variable (see above).
 
-The default action is to just render the Kubernetes resources YAML file after replacing all Jinja2 variables and stuff like that. In the `Example Playbook` section below there is an `Example 2 (assign tag to role)`. The role `githubixx.cilium-kubernetes` has a tag `role-cilium-kubernetes` assigned. Assuming that the values for the Helm chart should be rendered (nothing will be installed in this case) and the playbook is called `k8s.yml` execute the following command:
+The default action is to just render the Kubernetes resources YAML file after replacing all Jinja2 variables and stuff like that. In the `Example Playbook` section below there is an `Example 2 (assign tag to role)`. The role `githubixx.cilium_kubernetes` has a tag `role-cilium-kubernetes` assigned. Assuming that the values for the Helm chart should be rendered (nothing will be installed in this case) and the playbook is called `k8s.yml` execute the following command:
 
-```
+```bash
 ansible-playbook --tags=role-cilium-kubernetes k8s.yml
 ```
 
@@ -140,7 +140,7 @@ One of the final tasks is called `TASK [githubixx.cilium_kubernetes : Write temp
 
 If the rendered output contains everything you need the role can be installed which finally deploys Cilium:
 
-```
+```bash
 ansible-playbook --tags=role-cilium-kubernetes --extra-vars action=install k8s.yml
 ```
 
@@ -150,7 +150,7 @@ As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/mont
 
 Before doing the upgrade you basically only need to change `cilium_chart_version` variable e.g. from `1.10.10` to `1.11.4` to upgrade from `1.10.10` to `1.11.4`. So to do the update run
 
-```
+```bash
 ansible-playbook --tags=role-cilium-kubernetes --extra-vars action=upgrade k8s.yml
 ```
 
@@ -158,7 +158,7 @@ As already mentioned the role already includes some checks to make sure the upgr
 
 And finally if you want to get rid of Cilium you can delete all resources again:
 
-```
+```bash
 ansible-playbook --tags=role-cilium-kubernetes --extra-vars action=delete k8s.yml
 ```
 
@@ -168,19 +168,21 @@ Example Playbook
 ----------------
 
 Example 1 (without role tag):
-```
+
+```yaml
 - hosts: k8s_worker
   roles:
-    - githubixx.cilium-kubernetes
+    - githubixx.cilium_kubernetes
 ```
 
 Example 2 (assign tag to role):
-```
+
+```yaml
 -
   hosts: k8s_worker
   roles:
     -
-      role: githubixx.cilium-kubernetes
+      role: githubixx.cilium_kubernetes
       tags: role-cilium-kubernetes
 ```
 
