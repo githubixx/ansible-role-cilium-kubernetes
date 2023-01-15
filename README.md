@@ -6,7 +6,7 @@ This Ansible role installs [Cilium](https://docs.cilium.io) network on a Kuberne
 Versions
 --------
 
-I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `8.0.0+1.12.3` means this is release `8.0.0` of this role and it contains Cilium chart version `1.12.3`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
+I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `9.0.0+1.12.5` means this is release `9.0.0` of this role and it contains Cilium chart version `1.12.5`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
 
 Requirements
 ------------
@@ -26,9 +26,9 @@ And of course you need a Kubernetes Cluster ;-)
 Role Variables
 --------------
 
-```
+```yaml
 # Helm chart version
-cilium_chart_version: "1.12.3"
+cilium_chart_version: "1.12.5"
 
 # Helm chart name
 cilium_chart_name: "cilium"
@@ -104,15 +104,15 @@ cilium_delegate_to: 127.0.0.1
 # install, update/upgrade or deletes such a resource.
 cilium_helm_show_commands: false
 
-# Without "action" variable defined this role will only render a file
+# Without "cilium_action" variable defined this role will only render a file
 # with all the resources that will be installed or upgraded. The rendered
 # file with the resources will be called "template.yml" and will be
 # placed in the directory specified below.
 cilium_template_output_directory: "{{ '~/cilium/template' | expanduser }}"
 ```
 
-Usage:
-------
+Usage
+-----
 
 The first thing to do is to check `templates/cilium_values_default.yml.j2`. This file contains the values/settings for the Cilium Helm chart that are different to the default ones which are located [here](https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml). The default values of this Ansible role are using a TLS enabled `etcd` cluster. If you have a self hosted/bare metal Kubernetes cluster chances are high that there is already running an `etcd` cluster for the Kubernetes API server which is the case for me. I'm using my Ansible [etcd role](https://github.com/githubixx/ansible-role-etcd) to install such an `etcd` cluster and my [Kubernetes Certificate Authority role](https://github.com/githubixx/ansible-role-kubernetes-ca) to generate the certificates. So if you used my roles you can use this Cilium role basically as is.
 
@@ -120,11 +120,11 @@ The `templates/cilium_values_default.yml.j2` template also contains some `if` cl
 
 But nothing is made in stone ;-) To use your own values just create a file called `cilium_values_user.yml.j2` and put it into the `templates` directory. Then this Cilium role will use that file to render the Helm values. You can use `templates/cilium_values_default.yml.j2` as a template or just start from scratch. As mentioned above you can modify all settings for the Cilium Helm chart that are different to the default ones which are located [here](https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml).
 
-After the values file (`templates/cilium_values_default.yml.j2` or `templates/cilium_values_user.yml.j2`) is in place and the `defaults/main.yml` values are checked the role can be installed. Most of the role's tasks are executed locally by default so to say as quite a few tasks need to communicate with the Kubernetes API server or executing [Helm](https://helm.sh/) commands. But you can delegate this kind of tasks to a different host by using `cilium_delegate_to` variable (see above).
+After the values file (`templates/cilium_values_default.yml.j2` or `templates/cilium_values_user.yml.j2`) is in place and the `defaults/main.yml` values are checked the role can be installed. Most of the role's tasks are executed locally by default so to say as quite a few tasks need to communicate with the Kubernetes API server or executing [Helm](https://helm.sh/) commands. But you can delegate this kind of tasks to a different host by using `cilium_delegate_to` variable (see above). Just make sure that the host you delegate these kind of tasks has connection to the Kubernetes API server and the user a valid `KUBECONFIG` file.
 
-The default action is to just render the Kubernetes resources YAML file after replacing all Jinja2 variables and stuff like that. In the `Example Playbook` section below there is an `Example 2 (assign tag to role)`. The role `githubixx.cilium-kubernetes` has a tag `role-cilium-kubernetes` assigned. Assuming that the values for the Helm chart should be rendered (nothing will be installed in this case) and the playbook is called `k8s.yml` execute the following command:
+The default action is to just render the Kubernetes resources YAML file after replacing all Jinja2 variables and stuff like that. In the `Example Playbook` section below there is an `Example 2 (assign tag to role)`. The role `githubixx.cilium_kubernetes` has a tag `role-cilium-kubernetes` assigned. Assuming that the values for the Helm chart should be rendered (nothing will be installed in this case) and the playbook is called `k8s.yml` execute the following command:
 
-```
+```bash
 ansible-playbook --tags=role-cilium-kubernetes k8s.yml
 ```
 
@@ -140,26 +140,30 @@ One of the final tasks is called `TASK [githubixx.cilium_kubernetes : Write temp
 
 If the rendered output contains everything you need the role can be installed which finally deploys Cilium:
 
-```
-ansible-playbook --tags=role-cilium-kubernetes --extra-vars action=install k8s.yml
+```bash
+ansible-playbook --tags=role-cilium-kubernetes --extra-vars cilium_action=install k8s.yml
 ```
 
 To check if everything was deployed use the usual `kubectl` commands like `kubectl -n <cilium_namespace> get pods -o wide`.
 
-As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/months the role also can do upgrades. The role basically executes what is described in [Cilium upgrade guide](https://docs.cilium.io/en/v1.12/operations/upgrade/). That means the Cilium pre-flight check will be installed and some checks are executed before the update actually takes place. Have a look at `tasks/upgrade.yml` to see what's happening before, during and after the update. Of course you should consult [Cilium upgrade guide](https://docs.cilium.io/en/v1.12/operations/upgrade/) in general to check for major changes and stuff like that before upgrading. [Roll back](https://docs.cilium.io/en/v1.12/operations/upgrade/#step-3-rolling-back) is currently not implemented but can be easily done via `kubectl` as described in the upgrade document.
+As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/months the role also can do upgrades. The role basically executes what is described in [Cilium upgrade guide](https://docs.cilium.io/en/v1.12/operations/upgrade/). That means the Cilium pre-flight check will be installed and some checks are executed before the update actually takes place. Have a look at `tasks/upgrade.yml` to see what's happening before, during and after the update. Of course you should consult [Cilium upgrade guide](https://docs.cilium.io/en/v1.12/operations/upgrade/) in general to check for major changes and stuff like that before upgrading.
+
+If a upgrade wasn't successful a [Roll back](https://docs.cilium.io/en/v1.12/operations/upgrade/#step-3-rolling-back) to a previous version can be basically initiated by just changing `cilium_chart_version` variable. But you should definitely read the Cilium [roll back guide](https://docs.cilium.io/en/v1.12/operations/upgrade/#step-3-rolling-back). Switching between minor releases is normally not an issue but switching from one major release to a previous one might be not so easy.
+
+Also check `templates/cilium_values_default_pre_flight_check.yml.j2`. If you need to adjust values for the `pre-flight` check you can either change that file or create a file `templates/cilium_values_user_pre_flight_check.yml.j2` with your own values.
 
 Before doing the upgrade you basically only need to change `cilium_chart_version` variable e.g. from `1.10.10` to `1.11.4` to upgrade from `1.10.10` to `1.11.4`. So to do the update run
 
-```
-ansible-playbook --tags=role-cilium-kubernetes --extra-vars action=upgrade k8s.yml
+```bash
+ansible-playbook --tags=role-cilium-kubernetes --extra-vars cilium_action=upgrade k8s.yml
 ```
 
 As already mentioned the role already includes some checks to make sure the upgrade runs smooth but you should again check with `kubectl` if all works as expected after the upgrade.
 
 And finally if you want to get rid of Cilium you can delete all resources again:
 
-```
-ansible-playbook --tags=role-cilium-kubernetes --extra-vars action=delete k8s.yml
+```bash
+ansible-playbook --tags=role-cilium-kubernetes --extra-vars cilium_action=delete k8s.yml
 ```
 
 If you don't have any CNI plugins configured this will cause `kubelet` process on the Kubernetes worker nodes to issue CNI errors every now and then because there is no CNI related stuff anymore and of course connectivity between pods on different hosts will be gone together with any network policies and stuff like that.
@@ -168,19 +172,21 @@ Example Playbook
 ----------------
 
 Example 1 (without role tag):
-```
+
+```yaml
 - hosts: k8s_worker
   roles:
-    - githubixx.cilium-kubernetes
+    - githubixx.cilium_kubernetes
 ```
 
 Example 2 (assign tag to role):
-```
+
+```yaml
 -
   hosts: k8s_worker
   roles:
     -
-      role: githubixx.cilium-kubernetes
+      role: githubixx.cilium_kubernetes
       tags: role-cilium-kubernetes
 ```
 
@@ -198,19 +204,19 @@ molecule converge -s kvm
 Installing `Cilium` and the required resources. This will setup a virtual machine (VM) and installs a minimal Kubernetes setup using `minikube`. That setup will be used to install `Cilium` by using this role.
 
 ```bash
-molecule converge -s kvm -- --extra-vars action=install
+molecule converge -s kvm -- --extra-vars cilium_action=install
 ```
 
 Upgrading `Cilium` or changing parameters:
 
 ```bash
-molecule converge -s kvm -- --extra-vars action=upgrade
+molecule converge -s kvm -- --extra-vars cilium_action=upgrade
 ```
 
 Deleting `Cilium` and its resources:
 
 ```bash
-molecule converge -s kvm -- --extra-vars action=delete
+molecule converge -s kvm -- --extra-vars cilium_action=delete
 ```
 
 To run a few tests use
