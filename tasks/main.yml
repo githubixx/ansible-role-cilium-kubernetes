@@ -7,39 +7,14 @@
   args:
     executable: "/bin/bash"
 
-- name: Set default action to only render template via Helm
-  ansible.builtin.set_fact:
-    deploy_action: "template"
-  delegate_to: "{{ cilium_delegate_to }}"
-  run_once: true
-
-- name: Set action to install via Helm
-  ansible.builtin.set_fact:
-    deploy_action: "install"
-  delegate_to: "{{ cilium_delegate_to }}"
-  run_once: true
+- name: Set action according to cilium_action variable
   when:
-    - action is defined
-    - '"install" in action'
-
-- name: Set action to upgrade via Helm
+    - cilium_action is not defined
   ansible.builtin.set_fact:
-    deploy_action: "upgrade"
+    cilium_action: "template"
   delegate_to: "{{ cilium_delegate_to }}"
   run_once: true
-  when:
-    - action is defined
-    - '"upgrade" in action'
-
-- name: Set action to delete via Helm
-  ansible.builtin.set_fact:
-    deploy_action: "delete"
-  delegate_to: "{{ cilium_delegate_to }}"
-  run_once: true
-  when:
-    - action is defined
-    - '"delete" in action'
 
 - name: Include tasks to execute requested action
   ansible.builtin.include_tasks:
-    file: "tasks/{{ deploy_action | lower }}.yml"
+    file: "tasks/{{ cilium_action | lower }}.yml"
