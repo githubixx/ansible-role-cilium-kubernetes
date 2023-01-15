@@ -30,6 +30,7 @@ By default Cilium gets installed on all nodes including the control plane nodes.
 
 - upgrade to Cilium `v1.12.5`
 - added `.gitignore`
+- added `.yamlint`
 
 ## 8.0.0+1.12.3
 
