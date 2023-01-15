@@ -150,6 +150,8 @@ As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/mont
 
 If a upgrade wasn't successful a [Roll back](https://docs.cilium.io/en/v1.12/operations/upgrade/#step-3-rolling-back) to a previous version can be basically initiated by just changing `cilium_chart_version` variable. But you should definitely read the Cilium [roll back guide](https://docs.cilium.io/en/v1.12/operations/upgrade/#step-3-rolling-back). Switching between minor releases is normally not an issue but switching from one major release to a previous one might be not so easy.
 
+Also check `templates/cilium_values_default_pre_flight_check.yml.j2`. If you need to adjust values for the `pre-flight` check you can either change that file or create a file `templates/cilium_values_user_pre_flight_check.yml.j2` with your own values.
+
 Before doing the upgrade you basically only need to change `cilium_chart_version` variable e.g. from `1.10.10` to `1.11.4` to upgrade from `1.10.10` to `1.11.4`. So to do the update run
 
 ```bash
