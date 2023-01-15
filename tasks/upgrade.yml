@@ -74,12 +74,14 @@
     release_namespace: "{{ cilium_namespace }}"
     create_namespace: false
     update_repo_cache: true
-    values:
-      agent: false
-      preflight:
-        enabled: true
-      operator:
-        enabled: false
+    values: "{{ lookup('template', lookup('first_found', params)) | from_yaml }}"
+  vars:
+    params:
+      files:
+        - cilium_values_user_pre_flight_check.yml.j2
+        - cilium_values_default_pre_flight_check.yml.j2
+      paths:
+        - templates
   changed_when: false
   run_once: true
   delegate_to: "{{ cilium_delegate_to }}"
