@@ -24,7 +24,7 @@
 
     - name: Register current Cilium pre flight pods running
       ansible.builtin.set_fact:
-        cilium_pre_flight_pods_running: "{{ cilium_pre_flight_check_daemonset | json_query(query) }}"
+        cilium_pre_flight_pods_running: "{{ cilium_pre_flight_check_daemonset | to_json | from_json | community.general.json_query(query) }}"
       vars:
         query: "resources[0].status.numberReady"
       run_once: true
