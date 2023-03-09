@@ -23,7 +23,7 @@
 
 - name: Register current Cilium pods running
   ansible.builtin.set_fact:
-    cilium_pods_running: "{{ cilium__daemonset | json_query(query) }}"
+    cilium_pods_running: "{{ cilium__daemonset | to_json | from_json | community.general.json_query(query) }}"
   vars:
     query: "resources[0].status.numberReady"
   run_once: true
@@ -41,7 +41,7 @@
 
 - name: Register if there is a Cilium pre-flight check deployment leftover
   ansible.builtin.set_fact:
-    cilium_pre_flight_check_leftover: "{{ cilium__pre_flight_check_deployment | json_query(query) }}"
+    cilium_pre_flight_check_leftover: "{{ cilium__pre_flight_check_deployment | to_json | from_json | community.general.json_query(query) }}"
   vars:
     query: "resources[0].metadata.name"
   run_once: true
@@ -113,7 +113,7 @@
 
 - name: Register Cilium pre flight ready replicas
   ansible.builtin.set_fact:
-    cilium_pre_flight_ready_replicas: "{{ cilium__pre_flight_deployment | json_query(query) }}"
+    cilium_pre_flight_ready_replicas: "{{ cilium__pre_flight_deployment | to_json | from_json | community.general.json_query(query) }}"
   vars:
     query: "resources[0].status.readyReplicas"
   run_once: true
@@ -121,7 +121,7 @@
 
 - name: Register Cilium pre flight replicas
   ansible.builtin.set_fact:
-    cilium_pre_flight_replicas: "{{ cilium__pre_flight_deployment | json_query(query) }}"
+    cilium_pre_flight_replicas: "{{ cilium__pre_flight_deployment | to_json | from_json | community.general.json_query(query) }}"
   vars:
     query: "resources[0].status.replicas"
   run_once: true
@@ -186,6 +186,7 @@
         chart_ref: "{{ cilium_chart_name }}"
         chart_version: "{{ cilium_chart_version }}"
         release_namespace: "{{ cilium_namespace }}"
+        force: true
         create_namespace: false
         update_repo_cache: true
         values_files:

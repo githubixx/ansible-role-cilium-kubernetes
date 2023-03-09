@@ -28,7 +28,7 @@ Role Variables
 
 ```yaml
 # Helm chart version
-cilium_chart_version: "1.12.5"
+cilium_chart_version: "1.13.0"
 
 # Helm chart name
 cilium_chart_name: "cilium"
