@@ -1,5 +1,10 @@
 # Changelog
 
+## 10.0.0+1.13.0
+
+- upgrade to Cilium `v1.13.0`. Please check [](https://docs.cilium.io/en/v1.13/operations/upgrade/#current-release-required-changes) for possible incompatible changes and deprecations.
+- `tasks/pre_flight_check.yml` + `upgrade.yml`: fix ansible-lint issues
+
 ## 9.0.0+1.12.5
 
 - **BREAKING**: The `action` variable was renamed to `cilium_action` variable. This avoids variable collisions with other roles.
