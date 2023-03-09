@@ -186,6 +186,7 @@
         chart_ref: "{{ cilium_chart_name }}"
         chart_version: "{{ cilium_chart_version }}"
         release_namespace: "{{ cilium_namespace }}"
+        force: true
         create_namespace: false
         update_repo_cache: true
         values_files:
