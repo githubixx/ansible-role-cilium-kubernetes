@@ -1,5 +1,9 @@
 # Changelog
 
+## 10.0.1+1.13.2
+
+- upgrade to Cilium `v1.13.2`
+
 ## 10.0.0+1.13.0
 
 - upgrade to Cilium `v1.13.0`. Please check [](https://docs.cilium.io/en/v1.13/operations/upgrade/#current-release-required-changes) for possible incompatible changes and deprecations.
