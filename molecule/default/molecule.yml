@@ -51,7 +51,7 @@ provisioner:
           "mtu": "1500"
 
 scenario:
-  name: kvm
+  name: default
   test_sequence:
     - prepare
     - converge

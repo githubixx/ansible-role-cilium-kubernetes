@@ -193,42 +193,42 @@ Example 2 (assign tag to role):
 Testing
 -------
 
-This role has a small test setup that is created using [Molecule](https://github.com/ansible-community/molecule), libvirt (vagrant-libvirt) and QEMU/KVM. Please see my blog post [Testing Ansible roles with Molecule, libvirt (vagrant-libvirt) and QEMU/KVM](https://www.tauceti.blog/posts/testing-ansible-roles-with-molecule-libvirt-vagrant-qemu-kvm/) how to setup. The test configuration is [here](https://github.com/githubixx/ansible-role-cilium-kubernetes/tree/master/molecule/kvm).
+This role has a small test setup that is created using [Molecule](https://github.com/ansible-community/molecule), libvirt (vagrant-libvirt) and QEMU/KVM. Please see my blog post [Testing Ansible roles with Molecule, libvirt (vagrant-libvirt) and QEMU/KVM](https://www.tauceti.blog/posts/testing-ansible-roles-with-molecule-libvirt-vagrant-qemu-kvm/) how to setup. The test configuration is [here](https://github.com/githubixx/ansible-role-cilium-kubernetes/tree/master/molecule/default).
 
 Afterwards molecule can be executed. The following command will do a basic setup and create a template of the resources (default action see above) that will be created:
 
 ```bash
-molecule converge -s kvm
+molecule converge
 ```
 
 Installing `Cilium` and the required resources. This will setup a virtual machine (VM) and installs a minimal Kubernetes setup using `minikube`. That setup will be used to install `Cilium` by using this role.
 
 ```bash
-molecule converge -s kvm -- --extra-vars cilium_action=install
+molecule converge -- --extra-vars cilium_action=install
 ```
 
 Upgrading `Cilium` or changing parameters:
 
 ```bash
-molecule converge -s kvm -- --extra-vars cilium_action=upgrade
+molecule converge -- --extra-vars cilium_action=upgrade
 ```
 
 Deleting `Cilium` and its resources:
 
 ```bash
-molecule converge -s kvm -- --extra-vars cilium_action=delete
+molecule converge -- --extra-vars cilium_action=delete
 ```
 
 To run a few tests use
 
 ```bash
-molecule verify -s kvm
+molecule verify
 ```
 
 To clean up run
 
 ```bash
-molecule destroy -s kvm
+molecule destroy
 ```
 
 License
