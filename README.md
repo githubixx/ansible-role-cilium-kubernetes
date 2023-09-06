@@ -201,10 +201,16 @@ Afterwards molecule can be executed. The following command will do a basic setup
 molecule converge
 ```
 
-Installing `Cilium` and the required resources. This will setup a virtual machine (VM) and installs a minimal Kubernetes setup using `minikube`. That setup will be used to install `Cilium` by using this role.
+Installing `Cilium` and the required resources. This will setup a few virtual machines (VM) and installs a Kubernetes cluster. That setup will be used to install `Cilium` by using this role.
 
 ```bash
 molecule converge -- --extra-vars cilium_action=install
+```
+
+The following command can be used to install [CoreDNS](https://github.com/githubixx/ansible-kubernetes-playbooks/tree/master/coredns) for Kubernetes DNS stuff and taints controller nodes to only run Cilium pods:
+
+```bash
+molecule converge -- --extra-vars cilium_setup_networking=install
 ```
 
 Upgrading `Cilium` or changing parameters:
