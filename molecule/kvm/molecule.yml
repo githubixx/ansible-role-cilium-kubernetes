@@ -43,7 +43,7 @@ provisioner:
         containerd_crictl_config_file: "crictl.yaml"
         containerd_crictl_config_directory: "/etc"
         containerd_cni_binary_directory: "/opt/cni/bin"
-        minikube_version: 1.26.1
+        minikube_version: 1.31.2
         dockerd_settings_user:
           "log-level": "info"
           "iptables": "true"
