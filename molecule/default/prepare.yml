@@ -1,15 +1,114 @@
 ---
-# Copyright (C) 2022 Robert Wimmer
+# Copyright (C) 2023 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-- hosts: ubuntu
+- name: Update cache
+  hosts: k8s
+  remote_user: vagrant
   become: true
   gather_facts: true
   tasks:
     - name: Update APT package cache
-      ansible.builtin.apt:
+      apt:
         update_cache: true
         cache_valid_time: 3600
+
+- name: Harden hosts
+  hosts: all
+  remote_user: vagrant
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Setup harden-linux role
+      include_role:
+        name: githubixx.harden-linux
+
+- name: Setup Wireguard VPN
+  hosts: vpn
+  remote_user: vagrant
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Setup wireguard role
+      include_role:
+        name: githubixx.ansible_role_wireguard
+
+- name: Setup Kubernetes certificates
+  hosts: k8s_assets
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Install cfssl
+      include_role:
+        name: githubixx.cfssl
+
+    - name: Generate etcd and K8s TLS certificates
+      include_role:
+        name: githubixx.kubernetes-ca
+
+    - name: Copy certificate files from assets to local host
+      ansible.posix.synchronize:
+        mode: pull
+        src: "{{ k8s_config_directory }}"
+        dest: "/tmp"
+
+- name: Setup etcd
+  hosts: k8s_etcd
+  remote_user: vagrant
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Include etcd role
+      include_role:
+        name: githubixx.etcd
+
+- name: Setup Kubernetes authentication files
+  hosts: k8s_assets
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Install kubectl
+      ansible.builtin.include_role:
+        name: githubixx.kubectl
+
+    - name: Generate kubelet kubeconfig
+      ansible.builtin.include_tasks:
+        file: "tasks/kubelets.yml"
+
+    - name: Generate kube-proxy kubeconfig
+      ansible.builtin.include_tasks:
+        file: "tasks/kube-proxy.yml"
+
+    - name: Generate kube-controller-manager kubeconfig
+      ansible.builtin.include_tasks:
+        file: "tasks/kube-controller-manager.yml"
+
+    - name: Generate kube-scheduler kubeconfig
+      ansible.builtin.include_tasks:
+        file: "tasks/kube-scheduler.yml"
+
+    - name: Generate kube-admin-user kubeconfig
+      ansible.builtin.include_tasks:
+        file: "tasks/kube-admin-user.yml"
+
+    - name: Generate kubeencryption configuration
+      ansible.builtin.include_tasks:
+        file: "tasks/kubeencryptionconfig.yml"
+
+    - name: Copy configuration files from assets to local host
+      ansible.posix.synchronize:
+        mode: pull
+        src: "{{ k8s_config_directory }}"
+        dest: "/tmp"
+
+- name: Setup Kubernetes tooling
+  hosts: k8s_assets
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Generate configuration for kubectl
+      ansible.builtin.include_tasks:
+        file: "tasks/kubectlconfig.yml"
 
     - name: Install support packages
       ansible.builtin.package:
@@ -25,45 +124,33 @@
         name: kubernetes
         state: present
 
-    - name: Install Docker
-      ansible.builtin.include_role:
-        name: githubixx.docker
-
-    - name: Install containerd
-      ansible.builtin.include_role:
-        name: githubixx.containerd
-
     - name: Install Helm role
       ansible.builtin.include_role:
         name: gantsign.helm
 
-    - name: Install kubectl role
-      ansible.builtin.include_role:
-        name: githubixx.kubectl
-
-    - name: Install Cilium CLI role
-      ansible.builtin.include_role:
-        name: githubixx.cilium_cli
-
-    - name: Install minikube role
-      ansible.builtin.include_role:
-        name: darkwizard242.minikube
-
-    - name: Add user vagrant to docker group
-      ansible.builtin.user:
-        name: vagrant
-        groups: docker
-        append: true
-
-    - name: Reset SSH connection
-      meta: reset_connection
-
-- hosts: ubuntu
+- name: Setup Kubernetes controller
+  hosts: k8s_controller
+  become: true
+  gather_facts: true
   tasks:
-    - name: Start minikube (could take some time as K8s binaries needs to be downloaded first)
-      ansible.builtin.command:
-        cmd: minikube start --driver=docker --container-runtime=containerd --network-plugin=cni --nodes 3 --install-addons=false
+    - name: Include kubernetes_controller role
+      ansible.builtin.include_role:
+        name: githubixx.kubernetes_controller
 
-    - name: Delete kindnet DaemonSet
-      ansible.builtin.command:
-        cmd: kubectl -n kube-system delete ds kindnet
+- name: Setup containerd
+  hosts: k8s_worker
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Include containerd role
+      ansible.builtin.include_role:
+        name: githubixx.containerd
+
+- name: Setup Kubernetes worker
+  hosts: k8s_worker
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Include kubernetes_worker role
+      ansible.builtin.include_role:
+        name: githubixx.kubernetes_worker

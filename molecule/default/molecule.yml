@@ -12,43 +12,98 @@ driver:
     type: libvirt
 
 platforms:
-  - name: test-cilium-ubuntu2004
+  - name: test-assets
     box: generic/ubuntu2004
-    memory: 4096
+    memory: 2048
     cpus: 2
     groups:
-      - ubuntu
+      - vpn
+      - k8s_assets
+      - k8s
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 192.168.10.5
+  - name: test-controller1
+    box: generic/ubuntu2204
+    memory: 2048
+    cpus: 2
+    groups:
+      - vpn
+      - k8s_controller
+      - k8s_worker
+      - k8s_etcd
+      - k8s
     interfaces:
       - auto_config: true
         network_name: private_network
         type: static
         ip: 192.168.10.10
+  - name: test-controller2
+    box: generic/ubuntu2204
+    memory: 2048
+    cpus: 2
+    groups:
+      - vpn
+      - k8s_controller
+      - k8s_worker
+      - k8s_etcd
+      - k8s
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 192.168.10.20
+  - name: test-controller3
+    box: generic/ubuntu2004
+    memory: 2048
+    cpus: 2
+    groups:
+      - vpn
+      - k8s_controller
+      - k8s_worker
+      - k8s_etcd
+      - k8s
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 192.168.10.30
+  - name: test-worker1
+    box: generic/ubuntu2204
+    memory: 2048
+    cpus: 2
+    groups:
+      - vpn
+      - k8s_worker
+      - k8s
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 192.168.10.100
+  - name: test-worker2
+    box: generic/ubuntu2004
+    memory: 2048
+    cpus: 2
+    groups:
+      - vpn
+      - k8s_worker
+      - k8s
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 192.168.10.110
 
 provisioner:
   name: ansible
   connection_options:
     ansible_ssh_user: vagrant
+    ansible_become: true
   log: true
   lint: yamllint . && flake8 && ansible-lint
-  inventory:
-    host_vars:
-      test-cilium-ubuntu2004:
-        ansible_python_interpreter: "/usr/bin/python3"
-        cilium_etcd_enabled: "false"
-        cilium_delegate_to: test-cilium-ubuntu2004
-        cilium_helm_show_commands: true
-        containerd_flavor: "k8s"
-        containerd_tmp_directory: "/tmp"
-        containerd_runc_binary_directory: "/usr/local/sbin"
-        containerd_crictl_config_file: "crictl.yaml"
-        containerd_crictl_config_directory: "/etc"
-        containerd_cni_binary_directory: "/opt/cni/bin"
-        minikube_version: 1.31.2
-        dockerd_settings_user:
-          "log-level": "info"
-          "iptables": "true"
-          "ip-masq": "true"
-          "mtu": "1500"
 
 scenario:
   name: default

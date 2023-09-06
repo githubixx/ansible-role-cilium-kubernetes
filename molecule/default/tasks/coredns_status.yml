@@ -1,0 +1,19 @@
+---
+# Copyright (C) 2023 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: Waiting for CoreDNS manifest being applied
+  ansible.builtin.wait_for:
+    timeout: 10
+  run_once: true
+
+- name: Waiting for CoreDNS deployment
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Deployment
+    name: coredns
+    namespace: kube-system
+    wait: true
+    wait_sleep: 10
+    wait_timeout: 600
+  register: coredns__deployment_info

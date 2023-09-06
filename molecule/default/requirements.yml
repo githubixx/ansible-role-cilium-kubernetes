@@ -4,4 +4,12 @@
 
 roles:
   - gantsign.helm
-  - darkwizard242.minikube
+  - githubixx.ansible_role_wireguard
+  - githubixx.harden-linux
+  - githubixx.cfssl
+  - githubixx.kubernetes-ca
+  - githubixx.etcd
+  - githubixx.kubectl
+  - githubixx.kubernetes_controller
+  - githubixx.kubernetes_worker
+  - githubixx.containerd
