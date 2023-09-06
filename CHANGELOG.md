@@ -3,6 +3,7 @@
 ## 11.0.0+1.14.1
 
 - upgrade to Cilium `v1.14.1`
+- refactor Molecule tests
 
 ## 10.0.2+1.13.4
 
