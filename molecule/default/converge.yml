@@ -1,0 +1,40 @@
+---
+# Copyright (C) 2023 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: Setup Cilium
+  hosts: k8s_worker
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Include Cilium role
+      ansible.builtin.include_role:
+        name: githubixx.cilium_kubernetes
+      vars:
+        cilium_action: "install"
+
+- name: Setup tooling to make worker nodes usable
+  hosts: test-assets
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Setup tooling
+      when:
+        - cilium_setup_networking is defined
+        - cilium_setup_networking == "install"
+      block:
+        - name: Waiting for Cilium to become ready
+          ansible.builtin.include_tasks:
+            file: tasks/cilium_status.yml
+
+        - name: Control plane nodes should only run Cilium pods
+          ansible.builtin.include_tasks:
+            file: tasks/taint_controller_nodes.yml
+
+        - name: Install CoreDNS
+          ansible.builtin.include_tasks:
+            file: tasks/coredns.yml
+
+        - name: Waiting for CoreDNS to become ready
+          ansible.builtin.include_tasks:
+            file: tasks/coredns_status.yml

@@ -1,0 +1,19 @@
+---
+# Copyright (C) 2023 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: Waiting for Cilium Helm chart to be applied
+  ansible.builtin.wait_for:
+    timeout: 10
+  run_once: true
+
+- name: Fetch Cilium DaemonSet information
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: DaemonSet
+    name: cilium
+    namespace: cilium
+    wait: true
+    wait_sleep: 10
+    wait_timeout: 600
+  register: cilium__daemonset_info

@@ -1,0 +1,45 @@
+---
+# Copyright (C) 2023 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+- name: Create CoreDNS service account
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/serviceaccount.yml.j2') | from_yaml }}"
+  delegate_to: "{{ coredns_delegate_to }}"
+  run_once: true
+
+- name: Create CoreDNS ClusterRole
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/clusterrole.yml.j2') | from_yaml }}"
+  delegate_to: "{{ coredns_delegate_to }}"
+  run_once: true
+
+- name: Create CoreDNS ClusterRoleBinding
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/clusterrolebinding.yml.j2') | from_yaml }}"
+  delegate_to: "{{ coredns_delegate_to }}"
+  run_once: true
+
+- name: Create CoreDNS ConfigMap
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/configmap.yml.j2') | from_yaml }}"
+  delegate_to: "{{ coredns_delegate_to }}"
+  run_once: true
+
+- name: Create CoreDNS Deployment
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/deployment.yml.j2') | from_yaml }}"
+  delegate_to: "{{ coredns_delegate_to }}"
+  run_once: true
+
+- name: Create CoreDNS Service
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/service.yml.j2') | from_yaml }}"
+  delegate_to: "{{ coredns_delegate_to }}"
+  run_once: true

@@ -6,7 +6,7 @@ This Ansible role installs [Cilium](https://docs.cilium.io) network on a Kuberne
 Versions
 --------
 
-I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `10.0.1+1.13.2` means this is release `10.0.1` of this role and it contains Cilium chart version `1.13.2`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
+I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `11.0.0+1.14.1` means this is release `11.0.0` of this role and it contains Cilium chart version `1.14.1`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
 
 Requirements
 ------------
@@ -28,7 +28,7 @@ Role Variables
 
 ```yaml
 # Helm chart version
-cilium_chart_version: "1.13.4"
+cilium_chart_version: "1.14.1"
 
 # Helm chart name
 cilium_chart_name: "cilium"
@@ -146,13 +146,13 @@ ansible-playbook --tags=role-cilium-kubernetes --extra-vars cilium_action=instal
 
 To check if everything was deployed use the usual `kubectl` commands like `kubectl -n <cilium_namespace> get pods -o wide`.
 
-As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/months the role also can do upgrades. The role basically executes what is described in [Cilium upgrade guide](https://docs.cilium.io/en/v1.12/operations/upgrade/). That means the Cilium pre-flight check will be installed and some checks are executed before the update actually takes place. Have a look at `tasks/upgrade.yml` to see what's happening before, during and after the update. Of course you should consult [Cilium upgrade guide](https://docs.cilium.io/en/v1.12/operations/upgrade/) in general to check for major changes and stuff like that before upgrading.
+As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/months the role also can do upgrades. The role basically executes what is described in [Cilium upgrade guide](https://docs.cilium.io/en/v1.14/operations/upgrade/). That means the Cilium pre-flight check will be installed and some checks are executed before the update actually takes place. Have a look at `tasks/upgrade.yml` to see what's happening before, during and after the update. Of course you should consult [Cilium upgrade guide](https://docs.cilium.io/en/v1.14/operations/upgrade/) in general to check for major changes and stuff like that before upgrading. Also make sure to check the [Upgrade Notes](https://docs.cilium.io/en/stable/operations/upgrade/#current-release-required-changes)!
 
-If a upgrade wasn't successful a [Roll back](https://docs.cilium.io/en/v1.12/operations/upgrade/#step-3-rolling-back) to a previous version can be basically initiated by just changing `cilium_chart_version` variable. But you should definitely read the Cilium [roll back guide](https://docs.cilium.io/en/v1.12/operations/upgrade/#step-3-rolling-back). Switching between minor releases is normally not an issue but switching from one major release to a previous one might be not so easy.
+If a upgrade wasn't successful a [Roll back](https://docs.cilium.io/en/v1.14/operations/upgrade/#step-3-rolling-back) to a previous version can be basically initiated by just changing `cilium_chart_version` variable. But you should definitely read the Cilium [roll back guide](https://docs.cilium.io/en/v1.14/operations/upgrade/#step-3-rolling-back). Switching between minor releases is normally not an issue but switching from one major release to a previous one might be not so easy.
 
 Also check `templates/cilium_values_default_pre_flight_check.yml.j2`. If you need to adjust values for the `pre-flight` check you can either change that file or create a file `templates/cilium_values_user_pre_flight_check.yml.j2` with your own values.
 
-Before doing the upgrade you basically only need to change `cilium_chart_version` variable e.g. from `1.10.10` to `1.11.4` to upgrade from `1.10.10` to `1.11.4`. So to do the update run
+Before doing the upgrade you basically only need to change `cilium_chart_version` variable e.g. from `1.13.4` to `1.14.1` to upgrade from `1.13.4` to `1.14.1`. So to do the update run
 
 ```bash
 ansible-playbook --tags=role-cilium-kubernetes --extra-vars cilium_action=upgrade k8s.yml
@@ -193,42 +193,48 @@ Example 2 (assign tag to role):
 Testing
 -------
 
-This role has a small test setup that is created using [Molecule](https://github.com/ansible-community/molecule), libvirt (vagrant-libvirt) and QEMU/KVM. Please see my blog post [Testing Ansible roles with Molecule, libvirt (vagrant-libvirt) and QEMU/KVM](https://www.tauceti.blog/posts/testing-ansible-roles-with-molecule-libvirt-vagrant-qemu-kvm/) how to setup. The test configuration is [here](https://github.com/githubixx/ansible-role-cilium-kubernetes/tree/master/molecule/kvm).
+This role has a small test setup that is created using [Molecule](https://github.com/ansible-community/molecule), libvirt (vagrant-libvirt) and QEMU/KVM. Please see my blog post [Testing Ansible roles with Molecule, libvirt (vagrant-libvirt) and QEMU/KVM](https://www.tauceti.blog/posts/testing-ansible-roles-with-molecule-libvirt-vagrant-qemu-kvm/) how to setup. The test configuration is [here](https://github.com/githubixx/ansible-role-cilium-kubernetes/tree/master/molecule/default).
 
 Afterwards molecule can be executed. The following command will do a basic setup and create a template of the resources (default action see above) that will be created:
 
 ```bash
-molecule converge -s kvm
+molecule converge
 ```
 
-Installing `Cilium` and the required resources. This will setup a virtual machine (VM) and installs a minimal Kubernetes setup using `minikube`. That setup will be used to install `Cilium` by using this role.
+Installing `Cilium` and the required resources. This will setup a few virtual machines (VM) and installs a Kubernetes cluster. That setup will be used to install `Cilium` by using this role.
 
 ```bash
-molecule converge -s kvm -- --extra-vars cilium_action=install
+molecule converge -- --extra-vars cilium_action=install
+```
+
+The following command can be used to install [CoreDNS](https://github.com/githubixx/ansible-kubernetes-playbooks/tree/master/coredns) for Kubernetes DNS stuff and taints controller nodes to only run Cilium pods:
+
+```bash
+molecule converge -- --extra-vars cilium_setup_networking=install
 ```
 
 Upgrading `Cilium` or changing parameters:
 
 ```bash
-molecule converge -s kvm -- --extra-vars cilium_action=upgrade
+molecule converge -- --extra-vars cilium_action=upgrade
 ```
 
 Deleting `Cilium` and its resources:
 
 ```bash
-molecule converge -s kvm -- --extra-vars cilium_action=delete
+molecule converge -- --extra-vars cilium_action=delete
 ```
 
-To run a few tests use
+To run a few tests use (optionally add `-v` for more output):
 
 ```bash
-molecule verify -s kvm
+molecule verify
 ```
 
 To clean up run
 
 ```bash
-molecule destroy -s kvm
+molecule destroy
 ```
 
 License
