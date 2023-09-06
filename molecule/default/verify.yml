@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 - name: Verify setup
-  hosts: all
+  hosts: test-assets
   tasks:
     - name: Fetch Cilium DaemonSet information
       kubernetes.core.k8s_info:

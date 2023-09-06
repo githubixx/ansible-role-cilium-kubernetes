@@ -13,3 +13,4 @@ roles:
   - githubixx.kubernetes_controller
   - githubixx.kubernetes_worker
   - githubixx.containerd
+  - githubixx.cilium_cli

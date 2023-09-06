@@ -154,3 +154,11 @@
     - name: Include kubernetes_worker role
       ansible.builtin.include_role:
         name: githubixx.kubernetes_worker
+
+- name: Setup Cilium CLI
+  hosts: test-assets
+  become: true
+  tasks:
+    - name: Include cilium_cli role
+      ansible.builtin.include_role:
+        name: githubixx.cilium_cli
