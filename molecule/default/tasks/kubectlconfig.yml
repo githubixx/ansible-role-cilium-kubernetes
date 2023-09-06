@@ -2,7 +2,7 @@
 # Copyright (C) 2023 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-- name: kubectl config set-cluster
+- name: Running kubectl config set-cluster
   ansible.builtin.shell: >
     set -o errexit; \
     kubectl config set-cluster {{ k8s_config_cluster_name }} \
@@ -12,7 +12,7 @@
   register: set_cluster
   changed_when: false
 
-- name: kubectl config set-credentials admin
+- name: Running kubectl config set-credentials admin
   ansible.builtin.shell: >
     set -o errexit; \
     kubectl config set-credentials admin \
@@ -21,7 +21,7 @@
   register: set_credentials
   changed_when: false
 
-- name: kubectl config set-context
+- name: Running kubectl config set-context
   ansible.builtin.shell: >
     set -o errexit; \
     kubectl config set-context {{ k8s_config_cluster_name }} \
@@ -30,7 +30,7 @@
   register: set_context
   changed_when: false
 
-- name: kubectl config use-context
+- name: Running kubectl config use-context
   ansible.builtin.shell: >
     set -o errexit; \
     kubectl config use-context {{ k8s_config_cluster_name }}
