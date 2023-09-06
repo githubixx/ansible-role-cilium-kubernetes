@@ -225,7 +225,7 @@ Deleting `Cilium` and its resources:
 molecule converge -- --extra-vars cilium_action=delete
 ```
 
-To run a few tests use
+To run a few tests use (optionally add `-v` for more output):
 
 ```bash
 molecule verify
