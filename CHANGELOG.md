@@ -1,5 +1,9 @@
 # Changelog
 
+## 11.0.2+1.14.1
+
+- rename `githubixx.harden-linux` to `githubixx.harden_linux`
+
 ## 11.0.1+1.14.1
 
 - rename `githubixx.kubernetes-ca` to `githubixx.kubernetes_ca`
