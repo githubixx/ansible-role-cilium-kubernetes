@@ -1,5 +1,9 @@
 # Changelog
 
+## 11.0.1+1.14.1
+
+- rename `githubixx.kubernetes-ca` to `githubixx.kubernetes_ca`
+
 ## 11.0.0+1.14.1
 
 - upgrade to Cilium `v1.14.1`
