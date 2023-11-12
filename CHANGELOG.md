@@ -1,5 +1,9 @@
 # Changelog
 
+## 11.0.3+1.14.3
+
+- upgrade to Cilium `v1.14.3`
+
 ## 11.0.2+1.14.1
 
 - rename `githubixx.harden-linux` to `githubixx.harden_linux`
