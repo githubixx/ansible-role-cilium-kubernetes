@@ -1,6 +1,6 @@
 ---
-# Helm chart version (uses Cilium v1.14.3)
-cilium_chart_version: "1.14.3"
+# Helm chart version (uses Cilium v1.14.4)
+cilium_chart_version: "1.14.4"
 
 # Helm release name
 cilium_release_name: "cilium"
