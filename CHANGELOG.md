@@ -1,5 +1,9 @@
 # Changelog
 
+## 11.0.3+1.14.4
+
+- upgrade to Cilium `v1.14.4`
+
 ## 11.0.3+1.14.3
 
 - upgrade to Cilium `v1.14.3`
