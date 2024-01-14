@@ -1,5 +1,9 @@
 # Changelog
 
+## 11.0.6+1.14.5
+
+- fix Github action
+
 ## 11.0.5+1.14.5
 
 - upgrade to Cilium `v1.14.5`
