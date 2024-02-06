@@ -149,6 +149,8 @@ cilium_etcd_enabled: "true"
 # Delegate Cilium tasks that needs to communicate with the Kubernetes API
 # server to the following host.
 cilium_delegate_to: "test-assets"
+#
+cilium_chart_values_directory: "templates"
 # Show debug output for Cilium Helm commands.
 cilium_helm_show_commands: true
 cilium_etcd_interface: "{{ k8s_interface }}"
