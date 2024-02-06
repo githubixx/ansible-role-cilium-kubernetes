@@ -1,0 +1,10 @@
+---
+# Copyright (C) 2023 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# Allow all traffic from the following networks.
+harden_linux_ufw_allow_networks:
+  - "10.32.0.0/16"     # Server Cluster IP range
+  - "10.200.0.0/16"    # Pod IP range
+  - "10.10.10.0/24"    # Wireguard IP range
+  - "172.16.10.0/24"   # VM IP range

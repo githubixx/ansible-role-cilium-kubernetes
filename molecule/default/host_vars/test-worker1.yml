@@ -2,7 +2,16 @@
 # Copyright (C) 2023 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-wireguard_address: "10.10.10.100/24"
+wireguard_address: "10.10.10.200/24"
 wireguard_port: 51820
 wireguard_persistent_keepalive: "30"
-wireguard_endpoint: "192.168.10.100"
+wireguard_endpoint: "172.16.10.200"
+
+ha_proxy_frontend_bind_address: "127.0.0.1"
+ha_proxy_frontend_port: "16443"
+
+k8s_ctl_api_endpoint_host: "127.0.0.1"
+k8s_ctl_api_endpoint_port: "16443"
+
+k8s_worker_api_endpoint_host: "{{ k8s_ctl_api_endpoint_host }}"
+k8s_worker_api_endpoint_port: "{{ k8s_ctl_api_endpoint_port }}"

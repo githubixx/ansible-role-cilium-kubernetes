@@ -2,10 +2,19 @@
 # Copyright (C) 2023 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+- name: Gather facts
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Populate Ansible hostVars
+      ansible.builtin.setup:
+
 - name: Setup Cilium
   hosts: k8s_worker
   become: true
-  gather_facts: true
+  environment:
+    K8S_AUTH_KUBECONFIG: "{{ k8s_admin_conf_dir }}/admin.kubeconfig"
   tasks:
     - name: Include Cilium role
       ansible.builtin.include_role:
@@ -16,7 +25,8 @@
 - name: Setup tooling to make worker nodes usable
   hosts: test-assets
   become: true
-  gather_facts: true
+  environment:
+    K8S_AUTH_KUBECONFIG: "{{ k8s_admin_conf_dir }}/admin.kubeconfig"
   tasks:
     - name: Setup tooling
       when:
