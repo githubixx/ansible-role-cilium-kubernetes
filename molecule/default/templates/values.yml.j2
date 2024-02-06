@@ -1,0 +1,49 @@
+#
+# See https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml
+# for all possible values.
+#
+# All possible Jinja2 features/filters can be used but keep in mind that the
+# result needs to be a valid YAML file.
+
+# The Helm option keepDeprecatedProbes=true will keep the exec probe in
+# the new DaemonSet.
+keepDeprecatedProbes: true
+
+# The eBPF-based masquerading implementation is the most efficient implementation.
+# It requires Linux kernel >= 4.19.
+# See: https://docs.cilium.io/en/stable/concepts/networking/masquerading/
+bpf:
+  masquerade: true
+
+# Keep "kube-proxy" functionality
+kubeProxyReplacement: "false"
+
+# Enable nodePort
+nodePort:
+  enabled: true
+  enableHealthCheck: false
+
+# Enable socketLB
+socketLB:
+  enabled: true
+
+# Use Cilium's IPAM. Every K8s node will get a "/24" for Pod IPs out of the
+# range specifed in "clusterPoolIPv4PodCIDRList".
+ipam:
+  mode: "cluster-pool"
+  ciliumNodeUpdateRate: "15s"
+  operator:
+    clusterPoolIPv4PodCIDRList: ["10.100.0.0/16"]
+    clusterPoolIPv4MaskSize: 24
+
+cni:
+  chainingMode: portmap
+{% if cilium_etcd_enabled is defined and cilium_etcd_enabled == "true" -%}
+etcd:
+  enabled: true
+  endpoints:
+  {% for host in groups[cilium_etcd_nodes_group] -%}
+  - {% if cilium_etcd_secrets_name is defined %}https{% else %}http{% endif -%}://{{ hostvars[host]['ansible_' + cilium_etcd_interface].ipv4.address }}:{{ cilium_etcd_client_port }}
+  {% endfor -%}
+  ssl: {% if cilium_etcd_secrets_name is defined %}true{% else %}false{% endif -%}
+{% endif %}

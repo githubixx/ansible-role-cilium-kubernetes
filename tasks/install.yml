@@ -65,9 +65,12 @@
       vars:
         params:
           files:
+            - values.yml.j2
+            - values.yaml.j2
             - cilium_values_user.yml.j2
             - cilium_values_default.yml.j2
           paths:
+            - "{{ cilium_chart_values_directory }}"
             - templates
 
     - name: Install chart

@@ -1,6 +1,6 @@
 ---
-# Helm chart version (uses Cilium v1.14.5)
-cilium_chart_version: "1.14.5"
+# Helm chart version (uses Cilium v1.15.0)
+cilium_chart_version: "1.15.0"
 
 # Helm release name
 cilium_release_name: "cilium"
@@ -16,6 +16,14 @@ cilium_chart_url: "https://helm.cilium.io/"
 
 # Kubernetes namespace where Cilium resources should be installed
 cilium_namespace: "cilium"
+
+# Directory that contains Helm chart values file. Ansible will try to locate
+# a file called "values.yml.j2" or "values.yaml.j2" in the specified directory
+# (".j2" because you can use the usual Jinja2 template stuff there).
+# If not found the default "templates/cilium_values_default.yml.j2" will be
+# used (which can be used as a template BTW). The content of this file
+# will be provided to "helm install/template" command as values file.
+cilium_chart_values_directory: "/tmp/cilium/helm"
 
 # etcd settings. If "cilium_etcd_enabled" variable is defined and set to "true",
 # Cilium etcd settings are generated and deployed. Otherwise all the following

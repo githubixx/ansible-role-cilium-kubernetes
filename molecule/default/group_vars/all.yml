@@ -2,146 +2,156 @@
 # Copyright (C) 2023 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+# Use "systemd-timesyncd" for time services. It's available by default.
 harden_linux_ntp: "systemd-timesyncd"
 
-# Password for user "root" and "cilium" is "cilium"
-harden_linux_root_password: "$6$rounds=656000$mysecretsalt$IPK2dn/YVQ4vSNE7y/KlZOUY1kBo3V0pMDKSwVwrJk2R6s5IeAnoucTR2YcOvttZCjLkg3PuIp8Flx16kLNQy."
-harden_linux_deploy_user: "cilium"
-harden_linux_deploy_user_password: "$6$rounds=656000$mysecretsalt$IPK2dn/YVQ4vSNE7y/KlZOUY1kBo3V0pMDKSwVwrJk2R6s5IeAnoucTR2YcOvttZCjLkg3PuIp8Flx16kLNQy."
-harden_linux_deploy_user_home: "/home/cilium"
+# Password for user "root" and "vagrant" is "vagrant" in both cases. As
+# "vagrant" user is available in every Vagrant Ubuntu Box just use it.
+harden_linux_root_password: "$6$ec6PmcEygP6do8Ls$847Pqqo1fXJFeMvPkmP3ipLQ9vhny1PYtwnnIptpZ1Sc8KXUuPGu29aUTOdNdgIfxR3Bix5SUkNfSMMCetej41"
+harden_linux_deploy_user: "vagrant"
+harden_linux_deploy_user_password: "$6$ec6PmcEygP6do8Ls$847Pqqo1fXJFeMvPkmP3ipLQ9vhny1PYtwnnIptpZ1Sc8KXUuPGu29aUTOdNdgIfxR3Bix5SUkNfSMMCetej41"
+harden_linux_deploy_user_home: "/home/vagrant"
+harden_linux_deploy_user_uid: "1000"
+harden_linux_deploy_user_shell: "/bin/bash"
 
+# Enable IP forwarding for IPv4 and IPv6
 harden_linux_sysctl_settings_user:
   "net.ipv4.ip_forward": 1
   "net.ipv6.conf.default.forwarding": 1
   "net.ipv6.conf.all.forwarding": 1
 
+# Let SSHd listen on port 22, allow password authentication and allow "root"
+# login. The last two settings are not recommended for production use but for
+# this test deployment it's okay as it makes debugging easier and faster.
 harden_linux_sshd_settings_user:
   "^Port ": "Port 22"
   "^PasswordAuthentication": "PasswordAuthentication yes"
   "^PermitRootLogin": "PermitRootLogin yes"
 
-harden_linux_ufw_rules:
-  - rule: "allow"
-    to_port: "22"
-    protocol: "tcp"
-  - rule: "allow"
-    to_port: "51820"
-    protocol: "udp"
-  - rule: "allow"
-    to_port: "80"
-    protocol: "tcp"
-  - rule: "allow"
-    to_port: "443"
-    protocol: "tcp"
-  - rule: "allow"
-    to_port: "25"
-    protocol: "tcp"
-
-harden_linux_ufw_allow_networks:
-  - "10.0.0.0/8"
-  - "172.16.0.0/12"
-  - "192.168.0.0/16"
-
+# Enable logging for UFW.
 harden_linux_ufw_logging: 'on'
 
+# Set the default forward policy to "ACCEPT".
 harden_linux_ufw_defaults_user:
   "^DEFAULT_FORWARD_POLICY": 'DEFAULT_FORWARD_POLICY="ACCEPT"'
 
+# Don't block SSH logins from the following networks even login attempts fail
+# for a few times.
 harden_linux_sshguard_whitelist:
   - "127.0.0.0/8"
   - "::1/128"
   - "10.0.0.0/8"
+  - "172.16.0.0/12"
+  - "192.168.0.0/16"
 
-etcd_ca_conf_directory: "/tmp/k8s"
+# DNS
+harden_linux_systemd_resolved_settings:
+  - DNS=
+  - DNS=8.8.8.8 1.1.1.1 2606:4700:4700::1111 2620:fe::fe
+  - FallbackDNS=
+  - FallbackDNS=149.112.112.112 1.0.0.1 2620:fe::9 2606:4700:4700::1001
+  - DNSOverTLS=
+  - DNSOverTLS=opportunistic
+
+# Directory where the etcd certificates are stored on the Ansible controller
+# host. Certificate files for etcd will be copied from this directory to
+# the etcd nodes.
+etcd_ca_conf_directory: "{{ k8s_ca_conf_directory }}"
+# Directory where the etcd certificates are stored on the etcd hosts.
 etcd_conf_dir: "/etc/etcd"
+# Interface where the etcd service is listening on.
 etcd_interface: "{{ k8s_interface }}"
+# A few additional settings for etcd.
 etcd_settings_user:
   "heartbeat-interval": "250"
   "election-timeout": "2500"
+# Host names and IP addresses in the etcd certificates.
 etcd_cert_hosts:
   - localhost
   - 127.0.0.1
-  - 10.32.0.1
-  - kubernetes
-  - kubernetes.default
-  - kubernetes.default.svc
-  - kubernetes.default.svc.cluster
-  - kubernetes.svc.cluster.local
-  - 192.168.10.5
-  - 192.168.10.10
-  - 192.168.10.20
-  - 192.168.10.30
-  - 192.168.10.100
-  - 192.168.10.110
-  - 192.168.10.120
-  - 192.168.10.130
-  - 10.10.10.5
-  - 10.10.10.10
-  - 10.10.10.20
-  - 10.10.10.30
-  - 10.10.10.100
-  - 10.10.10.110
-  - 10.10.10.120
-  - 10.10.10.130
-  - test-controller1
-  - test-controller2
-  - test-controller3
-  - test-worker1
-  - test-worker2
-  - test-worker3
-
+# This list should contain all etcd clients that wants to connect to the etcd
+# cluster. The most important client is "kube-apiserver" of course. Also
+# "cilium" should connect. So we add this here too to generate the needed
+# certificates.
 etcd_additional_clients:
-  - k8s-apiserver-etcd
   - cilium
+  - k8s-apiserver-etcd
 
-k8s_ca_conf_directory: "/tmp/k8s"
-k8s_ca_conf_directory_perm: "0775"
-k8s_ca_file_perm: "0666"
-k8s_ca_certificate_owner: "{{ k8s_config_owner }}"
-k8s_ca_certificate_group: "{{ k8s_config_group }}"
+# Directory where the Kubernetes certificates are stored on the Ansible
+# controller host.
+k8s_ca_conf_directory: "/tmp/k8s-ca"
+# Permissions for the Kubernetes CA directory.
+k8s_ca_conf_directory_perm: "0700"
+# Permissions for the Kubernetes CA files.
+k8s_ca_file_perm: "0600"
+# Owner of the Kubernetes CA files.
+k8s_ca_certificate_owner: "vagrant"
+# Group of the Kubernetes CA files.
+k8s_ca_certificate_group: "vagrant"
 
-k8s_release: "1.27.5"
+# Interface where the Kubernetes control plane services are listening on.
 k8s_interface: "wg0"
-k8s_controller_delegate_to: "test-assets"
+# Interface where the etcd daemons listening on.
+k8s_ctl_etcd_interface: "{{ etcd_interface }}"
 
-k8s_config_cluster_name: "cilium"
-k8s_config_directory: "/tmp/k8s"
-k8s_config_directory_perm: "0777"
-k8s_config_file_perm: "0666"
-k8s_config_owner: "root"
-k8s_config_group: "root"
+# Delegate tasks like creating the Kubernetes CA certificates to the following
+# host. This host also communicates with the "kube-apiserver" if required
+# for certain tasks.
+k8s_ctl_delegate_to: "test-assets"
 
-k8s_encryption_config_directory: "{{k8s_config_directory}}"
+# Directory where the Kubernetes certificates are stored on the Ansible
+# controller host and where the Ansible can find them to be copied to the
+# Kubernetes control plane nodes.
+k8s_ctl_ca_conf_directory: "{{ k8s_ca_conf_directory }}"
+
+# The name of the Kubernetes cluster.
+k8s_config_cluster_name: "k8s"
+
+# Directory where "admin.kubeconfig" (the credentials file) for the "admin"
+# user is stored
+k8s_admin_conf_dir: "{{ '~/k8s/configs' | expanduser }}"
+# Permissions for the directory specified in "k8s_admin_conf_dir"
+k8s_admin_conf_dir_perm: "0700"
+# Owner of the directory specified in "k8s_admin_conf_dir" and for
+# "admin.kubeconfig" stored in this directory.
+k8s_admin_conf_owner: "root"
+# Group of the directory specified in "k8s_admin_conf_dir" and for
+# "admin.kubeconfig" stored in this directory.
+k8s_admin_conf_group: "root"
+
+# Run Kubernetes control plane services as the following user.
+k8s_run_as_user: "k8s"
+# Run Kubernetes control plane services as the following group.
+k8s_run_as_group: "k8s"
+
+# Key used for encrypting secrets (encryption at-rest) by the
+# "kube-apiserver".
 k8s_encryption_config_key: "Y29uZmlndXJhdGlvbjIyCg=="
-k8s_encryption_config_owner: "{{ k8s_config_owner }}"
-k8s_encryption_config_group: "{{ k8s_config_owner }}"
-k8s_encryption_config_directory_perm: "{{ k8s_config_directory_perm }}"
-k8s_encryption_config_file_perm: "{{ k8s_config_file_perm }}"
 
-k8s_conf_dir: "/var/lib/kubernetes"
-
-k8s_worker_kubelet_conf_dir: "/var/lib/kubelet"
-
-k8s_apiserver_secure_port: "6443"
-
+# Additional settings for the "kube-apiserver".
 k8s_apiserver_settings_user:
   "enable-aggregator-routing": "true"
 
 k8s_worker_kubelet_settings:
-  "config": "{{k8s_worker_kubelet_conf_dir}}/kubelet-config.yaml"
-  "node-ip": "{{hostvars[inventory_hostname]['ansible_' + k8s_interface].ipv4.address}}"
-  "kubeconfig": "{{k8s_worker_kubelet_conf_dir}}/kubeconfig"
+  "config": "{{ k8s_worker_kubelet_conf_dir }}/kubelet-config.yaml"
+  "node-ip": "{{ hostvars[inventory_hostname]['ansible_' + k8s_interface].ipv4.address }}"
+  "kubeconfig": "{{ k8s_worker_kubelet_conf_dir }}/kubeconfig"
   "seccomp-default": ""
 
-containerd_flavor: "k8s"
-containerd_tmp_directory: "/tmp"
-containerd_runc_binary_directory: "/usr/local/sbin"
-containerd_crictl_config_file: "crictl.yaml"
-containerd_crictl_config_directory: "/etc"
-containerd_cni_binary_directory: "/opt/cni/bin"
+# Directory for the "runc" binaries
+runc_bin_directory: "/usr/local/sbin"
 
+# Directory to store the "containerd" archive after download
+containerd_tmp_directory: "/tmp"
+
+# Use "etcd" for Cilium
 cilium_etcd_enabled: "true"
+# Delegate Cilium tasks that needs to communicate with the Kubernetes API
+# server to the following host.
 cilium_delegate_to: "test-assets"
+# Template directory for custom "values.yml.j2"
+cilium_chart_values_directory: "templates"
+# Show debug output for Cilium Helm commands.
 cilium_helm_show_commands: true
 cilium_etcd_interface: "{{ k8s_interface }}"
 cilium_etcd_client_port: 2379
@@ -153,13 +163,53 @@ cilium_etcd_cafile: "ca-etcd.pem"
 cilium_etcd_certfile: "cert-cilium.pem"
 cilium_etcd_keyfile: "cert-cilium-key.pem"
 
+# Delegate tasks to create CoreDNS K8s resources to this host.
 coredns_delegate_to: "test-assets"
 
+# Common name for "etcd" certificate authority certificates.
 ca_etcd_csr_cn: "etcd"
+ca_etcd_csr_key_algo: "ecdsa"
+ca_etcd_csr_key_size: "384"
+
+# Common name for "kube-apiserver" certificate authority certificate.
 ca_k8s_apiserver_csr_cn: "kubernetes"
-etcd_server_csr_cn: "etcd"
-etcd_peer_csr_cn: "etcd"
-etcd_client_csr_cn_prefix: "etcd"
-k8s_apiserver_csr_cn: "kubernetes"
-k8s_admin_csr_cn: "admin"
-k8s_controller_manager_sa_csr_cn: "service-accounts"
+ca_k8s_apiserver_csr_key_algo: "ecdsa"
+ca_k8s_apiserver_csr_key_size: "384"
+
+# Common names for "etcd" server, peer and client certificates.
+etcd_server_csr_cn: "etcd-server"
+etcd_server_csr_key_algo: "ecdsa"
+etcd_server_csr_key_size: "384"
+
+etcd_peer_csr_cn: "etcd-peer"
+etcd_peer_csr_key_algo: "ecdsa"
+etcd_peer_csr_key_size: "384"
+
+etcd_client_csr_cn_prefix: "etcd-client"
+etcd_client_csr_key_algo: "ecdsa"
+etcd_client_csr_key_size: "384"
+
+# Common names for kube-apiserver, admin and kube-controller-manager certificates.
+k8s_apiserver_csr_cn: "k8s-apiserver"
+k8s_apiserver_csr_key_algo: "ecdsa"
+k8s_apiserver_csr_key_size: "384"
+
+k8s_admin_csr_cn: "k8s-admin"
+k8s_admin_csr_key_algo: "ecdsa"
+k8s_admin_csr_key_size: "384"
+
+k8s_worker_csr_key_algo: "ecdsa"
+k8s_worker_csr_key_size: "384"
+
+k8s_controller_manager_csr_key_algo: "ecdsa"
+k8s_controller_manager_csr_key_size: "384"
+
+k8s_scheduler_csr_key_algo: "ecdsa"
+k8s_scheduler_csr_key_size: "384"
+
+k8s_controller_manager_sa_csr_cn: "k8s-service-accounts"
+k8s_controller_manager_sa_csr_key_algo: "ecdsa"
+k8s_controller_manager_sa_csr_key_size: "384"
+
+k8s_kube_proxy_csr_key_algo: "ecdsa"
+k8s_kube_proxy_csr_key_size: "384"

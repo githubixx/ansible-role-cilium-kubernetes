@@ -1,0 +1,18 @@
+---
+# Copyright (C) 2023 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# Open a few ports for ssh, Wireguard and etcd
+harden_linux_ufw_rules:
+  - rule: "allow"
+    to_port: "22"
+    protocol: "tcp"
+  - rule: "allow"
+    to_port: "51820"
+    protocol: "udp"
+  - rule: "allow"
+    to_port: "2379"
+    protocol: "tcp"
+  - rule: "allow"
+    to_port: "2380"
+    protocol: "tcp"

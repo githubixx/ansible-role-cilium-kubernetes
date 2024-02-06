@@ -1,5 +1,11 @@
 # Changelog
 
+## 12.0.0+1.15.0
+
+- upgrade to Cilium `v1.15.0`
+- refactor Molecule setup
+- introduce `cilium_chart_values_directory` variable
+
 ## 11.0.6+1.14.5
 
 - fix Github action

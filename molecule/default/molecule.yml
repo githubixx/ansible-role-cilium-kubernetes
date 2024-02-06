@@ -13,7 +13,7 @@ driver:
 
 platforms:
   - name: test-assets
-    box: generic/ubuntu2004
+    box: generic/ubuntu2204
     memory: 2048
     cpus: 2
     groups:
@@ -24,53 +24,102 @@ platforms:
       - auto_config: true
         network_name: private_network
         type: static
-        ip: 192.168.10.5
+        ip: 172.16.10.5
   - name: test-controller1
     box: generic/ubuntu2204
     memory: 2048
     cpus: 2
     groups:
       - vpn
+      - haproxy
       - k8s_controller
       - k8s_worker
-      - k8s_etcd
       - k8s
     interfaces:
       - auto_config: true
         network_name: private_network
         type: static
-        ip: 192.168.10.10
+        ip: 172.16.10.10
   - name: test-controller2
     box: generic/ubuntu2204
     memory: 2048
     cpus: 2
     groups:
       - vpn
+      - haproxy
       - k8s_controller
       - k8s_worker
-      - k8s_etcd
       - k8s
     interfaces:
       - auto_config: true
         network_name: private_network
         type: static
-        ip: 192.168.10.20
+        ip: 172.16.10.20
   - name: test-controller3
-    box: generic/ubuntu2004
+    box: generic/ubuntu2204
     memory: 2048
     cpus: 2
     groups:
       - vpn
       - k8s_controller
       - k8s_worker
-      - k8s_etcd
       - k8s
     interfaces:
       - auto_config: true
         network_name: private_network
         type: static
-        ip: 192.168.10.30
+        ip: 172.16.10.30
+  - name: test-etcd1
+    box: generic/ubuntu2204
+    memory: 2048
+    cpus: 2
+    groups:
+      - vpn
+      - k8s_etcd
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 172.16.10.100
+  - name: test-etcd2
+    box: generic/ubuntu2204
+    memory: 2048
+    cpus: 2
+    groups:
+      - vpn
+      - k8s_etcd
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 172.16.10.110
+  - name: test-etcd3
+    box: generic/ubuntu2204
+    memory: 2048
+    cpus: 2
+    groups:
+      - vpn
+      - k8s_etcd
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 172.16.10.120
   - name: test-worker1
+    box: generic/ubuntu2204
+    memory: 2048
+    cpus: 2
+    groups:
+      - vpn
+      - haproxy
+      - k8s_worker
+      - k8s
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 172.16.10.200
+  - name: test-worker2
     box: generic/ubuntu2204
     memory: 2048
     cpus: 2
@@ -82,20 +131,7 @@ platforms:
       - auto_config: true
         network_name: private_network
         type: static
-        ip: 192.168.10.100
-  - name: test-worker2
-    box: generic/ubuntu2004
-    memory: 2048
-    cpus: 2
-    groups:
-      - vpn
-      - k8s_worker
-      - k8s
-    interfaces:
-      - auto_config: true
-        network_name: private_network
-        type: static
-        ip: 192.168.10.110
+        ip: 172.16.10.210
 
 provisioner:
   name: ansible
