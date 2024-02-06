@@ -7,9 +7,9 @@ harden_linux_ntp: "systemd-timesyncd"
 
 # Password for user "root" and "vagrant" is "vagrant" in both cases. As
 # "vagrant" user is available in every Vagrant Ubuntu Box just use it.
-harden_linux_root_password: "$6$rounds=656000$mysecretsalt$fpyQ9hMON6iKKuM0Rz10WZKNJR4OkQTVfBmd4SPrJPsU9XmgQGRtogcUnFB5FLRIitswuQFr6Tr8Mos9l7Ojm0"
+harden_linux_root_password: "$6$ec6PmcEygP6do8Ls$847Pqqo1fXJFeMvPkmP3ipLQ9vhny1PYtwnnIptpZ1Sc8KXUuPGu29aUTOdNdgIfxR3Bix5SUkNfSMMCetej41"
 harden_linux_deploy_user: "vagrant"
-harden_linux_deploy_user_password: "$6$rounds=656000$mysecretsalt$fpyQ9hMON6iKKuM0Rz10WZKNJR4OkQTVfBmd4SPrJPsU9XmgQGRtogcUnFB5FLRIitswuQFr6Tr8Mos9l7Ojm0"
+harden_linux_deploy_user_password: "$6$ec6PmcEygP6do8Ls$847Pqqo1fXJFeMvPkmP3ipLQ9vhny1PYtwnnIptpZ1Sc8KXUuPGu29aUTOdNdgIfxR3Bix5SUkNfSMMCetej41"
 harden_linux_deploy_user_home: "/home/vagrant"
 harden_linux_deploy_user_uid: "1000"
 harden_linux_deploy_user_shell: "/bin/bash"
