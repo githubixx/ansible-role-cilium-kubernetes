@@ -6,7 +6,7 @@ This Ansible role installs [Cilium](https://docs.cilium.io) network on a Kuberne
 Versions
 --------
 
-I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `11.0.0+1.14.4` means this is release `11.0.0` of this role and it contains Cilium chart version `1.14.4`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
+I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `12.0.0+1.15.0` means this is release `12.0.0` of this role and it contains Cilium chart version `1.15.0`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
 
 Requirements
 ------------
@@ -28,7 +28,7 @@ Role Variables
 
 ```yaml
 # Helm chart version
-cilium_chart_version: "1.14.5"
+cilium_chart_version: "1.15.0"
 
 # Helm chart name
 cilium_chart_name: "cilium"
@@ -38,6 +38,14 @@ cilium_chart_url: "https://helm.cilium.io/"
 
 # Kubernetes namespace where Cilium resources should be installed
 cilium_namespace: "cilium"
+
+# Directory that contains Helm chart values file. Ansible will try to locate
+# a file called "values.yml.j2" or "values.yaml.j2" in the specified directory
+# (".j2" because you can use the usual Jinja2 template stuff there).
+# If not found the default "templates/cilium_values_default.yml.j2" will be
+# used (which can be used as a template BTW). The content of this file
+# will be provided to "helm install/template" command as values file.
+cilium_chart_values_directory: "/tmp/cilium/helm"
 
 # etcd settings. If "cilium_etcd_enabled" variable is defined and set to "true",
 # Cilium etcd settings are generated and deployed. Otherwise all the following
@@ -116,11 +124,9 @@ Usage
 
 The first thing to do is to check `templates/cilium_values_default.yml.j2`. This file contains the values/settings for the Cilium Helm chart that are different to the default ones which are located [here](https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml). The default values of this Ansible role are using a TLS enabled `etcd` cluster. If you have a self hosted/bare metal Kubernetes cluster chances are high that there is already running an `etcd` cluster for the Kubernetes API server which is the case for me. I'm using my Ansible [etcd role](https://github.com/githubixx/ansible-role-etcd) to install such an `etcd` cluster and my [Kubernetes Certificate Authority role](https://github.com/githubixx/ansible-role-kubernetes-ca) to generate the certificates. So if you used my roles you can use this Cilium role basically as is.
 
-The `templates/cilium_values_default.yml.j2` template also contains some `if` clauses to use an `etcd` cluster that is not TLS enabled. See `defaults/main.yml` to check which values can be changed. You can also introduce your own variables and use it in `templates/cilium_values_user.yml.j2` if you want of course.
+The `templates/cilium_values_default.yml.j2` template also contains some `if` clauses to use an `etcd` cluster that is not TLS enabled. See `defaults/main.yml` to check which values can be changed. You can also introduce your own variables. To use your own values just create a file called `values.yml.j2` or `values.yaml.j2` and put it into the directory specified in `cilium_chart_values_directory`. Then this role will use that file to render the Helm values.
 
-But nothing is made in stone ;-) To use your own values just create a file called `cilium_values_user.yml.j2` and put it into the `templates` directory. Then this Cilium role will use that file to render the Helm values. You can use `templates/cilium_values_default.yml.j2` as a template or just start from scratch. As mentioned above you can modify all settings for the Cilium Helm chart that are different to the default ones which are located [here](https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml).
-
-After the values file (`templates/cilium_values_default.yml.j2` or `templates/cilium_values_user.yml.j2`) is in place and the `defaults/main.yml` values are checked the role can be installed. Most of the role's tasks are executed locally by default so to say as quite a few tasks need to communicate with the Kubernetes API server or executing [Helm](https://helm.sh/) commands. But you can delegate this kind of tasks to a different host by using `cilium_delegate_to` variable (see above). Just make sure that the host you delegate these kind of tasks has connection to the Kubernetes API server and the user a valid `KUBECONFIG` file.
+After the values file is in place and the `defaults/main.yml` values are checked the role can be installed. Most of the role's tasks are executed locally by default so to say as quite a few tasks need to communicate with the Kubernetes API server or executing [Helm](https://helm.sh/) commands. But you can delegate this kind of tasks to a different host by using `cilium_delegate_to` variable (see above). Just make sure that the host you delegate these kind of tasks has connection to the Kubernetes API server and the user a valid `KUBECONFIG` file.
 
 The default action is to just render the Kubernetes resources YAML file after replacing all Jinja2 variables and stuff like that. In the `Example Playbook` section below there is an `Example 2 (assign tag to role)`. The role `githubixx.cilium_kubernetes` has a tag `role-cilium-kubernetes` assigned. Assuming that the values for the Helm chart should be rendered (nothing will be installed in this case) and the playbook is called `k8s.yml` execute the following command:
 
@@ -146,9 +152,9 @@ ansible-playbook --tags=role-cilium-kubernetes --extra-vars cilium_action=instal
 
 To check if everything was deployed use the usual `kubectl` commands like `kubectl -n <cilium_namespace> get pods -o wide`.
 
-As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/months the role also can do upgrades. The role basically executes what is described in [Cilium upgrade guide](https://docs.cilium.io/en/v1.14/operations/upgrade/). That means the Cilium pre-flight check will be installed and some checks are executed before the update actually takes place. Have a look at `tasks/upgrade.yml` to see what's happening before, during and after the update. Of course you should consult [Cilium upgrade guide](https://docs.cilium.io/en/v1.14/operations/upgrade/) in general to check for major changes and stuff like that before upgrading. Also make sure to check the [Upgrade Notes](https://docs.cilium.io/en/stable/operations/upgrade/#current-release-required-changes)!
+As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/months the role also can do upgrades. The role basically executes what is described in [Cilium upgrade guide](https://docs.cilium.io/en/v1.15/operations/upgrade/). That means the Cilium pre-flight check will be installed and some checks are executed before the update actually takes place. Have a look at `tasks/upgrade.yml` to see what's happening before, during and after the update. Of course you should consult [Cilium upgrade guide](https://docs.cilium.io/en/v1.15/operations/upgrade/) in general to check for major changes and stuff like that before upgrading. Also make sure to check the [Upgrade Notes](https://docs.cilium.io/en/stable/operations/upgrade/#current-release-required-changes)!
 
-If a upgrade wasn't successful a [Roll back](https://docs.cilium.io/en/v1.14/operations/upgrade/#step-3-rolling-back) to a previous version can be basically initiated by just changing `cilium_chart_version` variable. But you should definitely read the Cilium [roll back guide](https://docs.cilium.io/en/v1.14/operations/upgrade/#step-3-rolling-back). Switching between minor releases is normally not an issue but switching from one major release to a previous one might be not so easy.
+If a upgrade wasn't successful a [Roll back](https://docs.cilium.io/en/v1.15/operations/upgrade/#step-3-rolling-back) to a previous version can be basically initiated by just changing `cilium_chart_version` variable. But you should definitely read the Cilium [roll back guide](https://docs.cilium.io/en/v1.15/operations/upgrade/#step-3-rolling-back). Switching between minor releases is normally not an issue but switching from one major release to a previous one might be not so easy.
 
 Also check `templates/cilium_values_default_pre_flight_check.yml.j2`. If you need to adjust values for the `pre-flight` check you can either change that file or create a file `templates/cilium_values_user_pre_flight_check.yml.j2` with your own values.
 
