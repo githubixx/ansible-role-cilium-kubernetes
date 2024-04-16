@@ -1,21 +1,18 @@
-cilium-kubernetes
-=================
+# cilium-kubernetes
 
 This Ansible role installs [Cilium](https://docs.cilium.io) network on a Kubernetes cluster. Behind the doors it uses the official [Helm chart](https://helm.cilium.io/). Currently procedures like installing, upgrading and deleting the Cilium deployment are supported.
 
-Versions
---------
+## Versions
 
-I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `12.0.0+1.15.0` means this is release `12.0.0` of this role and it contains Cilium chart version `1.15.0`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
+I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `13.0.0+1.15.3` means this is release `13.0.0` of this role and it contains Cilium chart version `1.15.3`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
 
-Requirements
-------------
+## Requirements
 
 You need to have [Helm 3](https://helm.sh/) binary installed on that host where `ansible-playbook` is executed or on that host where you delegated the playbooks to (e.g. by using `cilium_delegate_to` variable). You can either
 
 - use your favorite package manager if your distribution includes `helm` in its repository (for Archlinux use `sudo pacman -S helm` e.g.)
 - or use one of the Ansible `Helm` roles (e.g. [helm](https://galaxy.ansible.com/gantsign/helm) - which gets also installed if you use `ansible-galaxy role install -vr requirements.yml`
-- or directly download the binary from [Helm releases)[https://github.com/helm/helm/releases]) and put it into `/usr/local/bin/` directory e.g.
+- or directly download the binary from [Helm releases](https://github.com/helm/helm/releases) and put it into `/usr/local/bin/` directory e.g.
 
 A properly configured `KUBECONFIG` is also needed (which is located at `${HOME}/.kube/config` by default). Normally if `kubectl` works with your cluster then everything should be already fine in this regards.
 
@@ -23,12 +20,58 @@ Additionally the Ansible `kubernetes.core` collection needs to be installed. Thi
 
 And of course you need a Kubernetes Cluster ;-)
 
-Role Variables
---------------
+## Installation
+
+- Directly download from Github (Change into Ansible roles directory before cloning. You can figure out the role path by using `ansible-config dump | grep DEFAULT_ROLES_PATH` command):
+`git clone https://github.com/githubixx/ansible-role-cilium-kubernetes.git githubixx.cilium_kubernetes`
+
+- Via `ansible-galaxy` command and download directly from Ansible Galaxy:
+`ansible-galaxy install role githubixx.cilium_kubernetes`
+
+- Create a `requirements.yml` file with the following content (this will download the role from Github) and install with `ansible-galaxy role install -r requirements.yml` (change `version` if needed):
+
+```yaml
+---
+roles:
+  - name: githubixx.cilium_kubernetes
+    src: https://github.com/githubixx/ansible-role-cilium-kubernetes.git
+    version: 13.0.0+1.15.3
+```
+
+## Changelog
+
+**Change history:**
+
+See full [CHANGELOG.md](https://github.com/githubixx/ansible-role-kubernetes-worker/blob/master/CHANGELOG.md)
+
+**Recent changes:**
+
+## 13.0.0+1.15.3
+
+### Breaking
+
+- changes in `templates/cilium_values_default.yml.j2`:
+  - added `kubeProxyReplacement`, `nodePort` and `socketLB` (this is needed because BPF masquerade requires NodePort)
+
+### Update
+
+- upgrade to Cilium `v1.15.3`
+
+### Molecule
+
+- replace Vagrant `generic/ubuntu2204` boxes with `alvistack/ubuntu-22.04`
+
+## 12.0.0+1.15.0
+
+- upgrade to Cilium `v1.15.0`
+- refactor Molecule setup
+- introduce `cilium_chart_values_directory` variable
+
+## Role Variables
 
 ```yaml
 # Helm chart version
-cilium_chart_version: "1.15.0"
+cilium_chart_version: "1.15.3"
 
 # Helm chart name
 cilium_chart_name: "cilium"
@@ -119,8 +162,7 @@ cilium_helm_show_commands: false
 cilium_template_output_directory: "{{ '~/cilium/template' | expanduser }}"
 ```
 
-Usage
------
+## Usage
 
 The first thing to do is to check `templates/cilium_values_default.yml.j2`. This file contains the values/settings for the Cilium Helm chart that are different to the default ones which are located [here](https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml). The default values of this Ansible role are using a TLS enabled `etcd` cluster. If you have a self hosted/bare metal Kubernetes cluster chances are high that there is already running an `etcd` cluster for the Kubernetes API server which is the case for me. I'm using my Ansible [etcd role](https://github.com/githubixx/ansible-role-etcd) to install such an `etcd` cluster and my [Kubernetes Certificate Authority role](https://github.com/githubixx/ansible-role-kubernetes-ca) to generate the certificates. So if you used my roles you can use this Cilium role basically as is.
 
@@ -174,8 +216,7 @@ ansible-playbook --tags=role-cilium-kubernetes --extra-vars cilium_action=delete
 
 If you don't have any CNI plugins configured this will cause `kubelet` process on the Kubernetes worker nodes to issue CNI errors every now and then because there is no CNI related stuff anymore and of course connectivity between pods on different hosts will be gone together with any network policies and stuff like that.
 
-Example Playbook
-----------------
+## Example Playbook
 
 Example 1 (without role tag):
 
@@ -196,8 +237,7 @@ Example 2 (assign tag to role):
       tags: role-cilium-kubernetes
 ```
 
-Testing
--------
+## Testing
 
 This role has a small test setup that is created using [Molecule](https://github.com/ansible-community/molecule), libvirt (vagrant-libvirt) and QEMU/KVM. Please see my blog post [Testing Ansible roles with Molecule, libvirt (vagrant-libvirt) and QEMU/KVM](https://www.tauceti.blog/posts/testing-ansible-roles-with-molecule-libvirt-vagrant-qemu-kvm/) how to setup. The test configuration is [here](https://github.com/githubixx/ansible-role-cilium-kubernetes/tree/master/molecule/default).
 
@@ -243,12 +283,10 @@ To clean up run
 molecule destroy
 ```
 
-License
--------
+## License
 
 GNU GENERAL PUBLIC LICENSE Version 3
 
-Author Information
-------------------
+## Author Information
 
 [http://www.tauceti.blog](http://www.tauceti.blog)
