@@ -2,7 +2,18 @@
 
 ## 13.0.0+1.15.3
 
+### Breaking
+
+- changes in `templates/cilium_values_default.yml.j2`:
+  - added `kubeProxyReplacement`, `nodePort` and `socketLB` (this is needed because BPF masquerade requires NodePort)
+
+### Update
+
 - upgrade to Cilium `v1.15.3`
+
+### Molecule
+
+- replace Vagrant `generic/ubuntu2204` boxes with `alvistack/ubuntu-22.04`
 
 ## 12.0.0+1.15.0
 
