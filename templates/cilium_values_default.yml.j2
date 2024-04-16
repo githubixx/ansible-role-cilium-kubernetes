@@ -28,6 +28,18 @@ upgradeCompatibility: "1.7"
 bpf:
   masquerade: true
 
+# Keep "kube-proxy" functionality
+kubeProxyReplacement: "false"
+
+# Enable nodePort
+nodePort:
+  enabled: true
+  enableHealthCheck: false
+
+# Enable socketLB
+socketLB:
+  enabled: true
+
 cni:
   chainingMode: portmap
 {% if cilium_etcd_enabled is defined and cilium_etcd_enabled == "true" -%}
