@@ -12,6 +12,8 @@
       ansible.builtin.apt:
         update_cache: true
         cache_valid_time: 3600
+    - name: Reboot for kernel updates
+      ansible.builtin.reboot:
 
 - name: Harden hosts
   hosts: all
@@ -82,11 +84,10 @@
       vars:
         packages:
           - conntrack
-          - python3-pip
 
     - name: Install kubernetes Python package
-      ansible.builtin.pip:
-        name: kubernetes
+      ansible.builtin.package:
+        name: python3-kubernetes
         state: present
 
     - name: Install Helm role

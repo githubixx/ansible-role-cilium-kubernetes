@@ -46,6 +46,16 @@ See full [CHANGELOG.md](https://github.com/githubixx/ansible-role-kubernetes-wor
 
 **Recent changes:**
 
+## 13.1.0+1.15.8
+
+### Update
+
+- upgrade to Cilium `v1.15.8
+
+### Molecule
+
+- replace Vagrant `alvistack/ubuntu-22.04` boxes with `alvistack/ubuntu-24.04`
+
 ## 13.0.0+1.15.3
 
 ### Breaking
@@ -71,7 +81,7 @@ See full [CHANGELOG.md](https://github.com/githubixx/ansible-role-kubernetes-wor
 
 ```yaml
 # Helm chart version
-cilium_chart_version: "1.15.3"
+cilium_chart_version: "1.15.8"
 
 # Helm chart name
 cilium_chart_name: "cilium"

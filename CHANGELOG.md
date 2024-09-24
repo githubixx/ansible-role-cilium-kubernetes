@@ -1,11 +1,21 @@
 # Changelog
 
+## 13.1.0+1.15.8
+
+### Update
+
+- upgrade to Cilium `v1.15.8`
+
+### Molecule
+
+- replace Vagrant `alvistack/ubuntu-22.04` boxes with `alvistack/ubuntu-24.04`
+
 ## 13.0.0+1.15.3
 
 ### Breaking
 
 - changes in `templates/cilium_values_default.yml.j2`:
-  - added `kubeProxyReplacement`, `nodePort` and `socketLB` (this is needed because BPF masquerade requires NodePort)
+- added `kubeProxyReplacement`, `nodePort` and `socketLB` (this is needed because BPF masquerade requires NodePort)
 
 ### Update
 
