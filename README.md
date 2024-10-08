@@ -52,7 +52,7 @@ See full [CHANGELOG.md](https://github.com/githubixx/ansible-role-kubernetes-wor
 
 All new features are explained in the Cilium `1.16` announcement blog: [Cilium 1.16 – High-Performance Networking With Netkit, Gateway API Gamma Support, BGPV2 and More!](https://isovalent.com/blog/post/cilium-1-16/).
 
-In general it makes sense to update to the latest Cilium `1.15.x` version first before upgrading to `1.16.x`.
+In general it makes sense to update to the latest Cilium `1.15.x` version first before upgrading to `1.16.x`. If you've used the default (or slightly adjusted) settings that this Ansible role provides then the upgrade should be pretty straight forward.
 
 - **Update**
   - upgrade to Cilium `v1.16.2`

@@ -6,7 +6,7 @@
 
 All new features are explained in the Cilium `1.16` announcement blog: [Cilium 1.16 – High-Performance Networking With Netkit, Gateway API Gamma Support, BGPV2 and More!](https://isovalent.com/blog/post/cilium-1-16/).
 
-In general it makes sense to update to the latest Cilium `1.15.x` version first before upgrading to `0.16.x`.
+In general it makes sense to update to the latest Cilium `1.15.x` version first before upgrading to `0.16.x`. If you've used the default (or slightly) settings that 
 
 - **Update**
   - upgrade to Cilium `v1.16.2`
