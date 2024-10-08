@@ -4,6 +4,8 @@
 
 - name: Verify setup
   hosts: test-assets
+  environment:
+    K8S_AUTH_KUBECONFIG: "{{ k8s_admin_conf_dir }}/admin.kubeconfig"
   tasks:
     - name: Fetch Cilium DaemonSet information
       kubernetes.core.k8s_info:
@@ -29,11 +31,35 @@
           - (cilium__daemonset_info.resources[0].status.numberReady | default(0) | int ) >= 1
 
     - name: Fetch Cilium status
+      become: yes
+      become_user: vagrant
       ansible.builtin.command:
-        cmd: cilium -n cilium status
-      register: cilium__status
+        cmd: cilium -n cilium status --output json
+      register: cilium__json_status
+
+    - name: Register cilium pods unavailable
+      ansible.builtin.set_fact:
+        cilium__cilium_pods_running: "{{ cilium__json_status | to_json | from_json | community.general.json_query(query) }}"
+      vars:
+        query: "pod_state.cilium.Unavailable"
+
+    - name: Check if cilium pods unavailable is 0
+      ansible.builtin.fail:
+        msg: "Ja: {{ cilium__cilium_pods_running }}"
+      when: cilium__cilium_pods_running | int != 0
+
+    - name: Register cilium-operator pods unavailable
+      ansible.builtin.set_fact:
+        cilium__cilium_operator_pods_running: "{{ cilium__json_status | to_json | from_json | community.general.json_query(query) }}"
+      vars:
+        query: 'pod_state."cilium-operator".Unavailable'
+
+    - name: Check if cilium-operator pods unavailable is 0
+      ansible.builtin.fail:
+        msg: "Ja: {{ cilium__cilium_operator_pods_running }}"
+      when: cilium__cilium_operator_pods_running | int != 0
 
     - name: Print Cilium status output
       ansible.builtin.debug:
-        var: cilium__status.stdout
+        var: cilium__json_status.stdout
       when: ansible_verbosity > 1
