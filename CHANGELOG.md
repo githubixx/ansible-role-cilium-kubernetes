@@ -1,29 +1,40 @@
 # Changelog
 
+## 14.0.0+1.16.2
+
+**NOTE:** Upgrading from Cilium `1.15.x` to `1.16.x` is a major release upgrade! Please read the [1.16 Upgrade Notes](https://docs.cilium.io/en/v1.16/operations/upgrade/#current-release-required-changes) carefully and adjust your settings accordingly!
+
+All new features are explained in the Cilium `1.16` announcement blog: [Cilium 1.16 – High-Performance Networking With Netkit, Gateway API Gamma Support, BGPV2 and More!](https://isovalent.com/blog/post/cilium-1-16/).
+
+In general it makes sense to update to the latest Cilium `1.15.x` version first before upgrading to `0.16.x`.
+
+- **Update**
+  - upgrade to Cilium `v1.16.2`
+
+- **Other**
+  - update `.yamllint`
+
+- **Molecule**
+  - add a few more checks in `verify.yml`
+
 ## 13.1.0+1.15.8
 
-### Update
+- **Update**
+  - upgrade to Cilium `v1.15.8`
 
-- upgrade to Cilium `v1.15.8`
-
-### Molecule
-
-- replace Vagrant `alvistack/ubuntu-22.04` boxes with `alvistack/ubuntu-24.04`
+- **Molecule**
+  - replace Vagrant `alvistack/ubuntu-22.04` boxes with `alvistack/ubuntu-24.04`
 
 ## 13.0.0+1.15.3
 
-### Breaking
+- **Breaking**
+  - changes in `templates/cilium_values_default.yml.j2`: added `kubeProxyReplacement`, `nodePort` and `socketLB` (this is needed because BPF masquerade requires NodePort)
 
-- changes in `templates/cilium_values_default.yml.j2`:
-- added `kubeProxyReplacement`, `nodePort` and `socketLB` (this is needed because BPF masquerade requires NodePort)
+- **Update**
+  - upgrade to Cilium `v1.15.3`
 
-### Update
-
-- upgrade to Cilium `v1.15.3`
-
-### Molecule
-
-- replace Vagrant `generic/ubuntu2204` boxes with `alvistack/ubuntu-22.04`
+- **Molecule**
+  - replace Vagrant `generic/ubuntu2204` boxes with `alvistack/ubuntu-22.04`
 
 ## 12.0.0+1.15.0
 

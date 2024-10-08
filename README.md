@@ -4,7 +4,7 @@ This Ansible role installs [Cilium](https://docs.cilium.io) network on a Kuberne
 
 ## Versions
 
-I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `13.0.0+1.15.3` means this is release `13.0.0` of this role and it contains Cilium chart version `1.15.3`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
+I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `14.0.0+1.16.2` means this is release `14.0.0` of this role and it contains Cilium chart version `1.16.2`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
 
 ## Requirements
 
@@ -35,7 +35,7 @@ And of course you need a Kubernetes Cluster ;-)
 roles:
   - name: githubixx.cilium_kubernetes
     src: https://github.com/githubixx/ansible-role-cilium-kubernetes.git
-    version: 13.0.0+1.15.3
+    version: 14.0.0+1.16.2
 ```
 
 ## Changelog
@@ -46,42 +46,47 @@ See full [CHANGELOG.md](https://github.com/githubixx/ansible-role-kubernetes-wor
 
 **Recent changes:**
 
+## 14.0.0+1.16.2
+
+**NOTE:** Upgrading from Cilium `1.15.x` to `1.16.x` is a major release upgrade! Please read the [1.16 Upgrade Notes](https://docs.cilium.io/en/v1.16/operations/upgrade/#current-release-required-changes) carefully and adjust your settings accordingly!
+
+All new features are explained in the Cilium `1.16` announcement blog: [Cilium 1.16 – High-Performance Networking With Netkit, Gateway API Gamma Support, BGPV2 and More!](https://isovalent.com/blog/post/cilium-1-16/).
+
+In general it makes sense to update to the latest Cilium `1.15.x` version first before upgrading to `1.16.x`.
+
+- **Update**
+  - upgrade to Cilium `v1.16.2`
+
+- **Other**
+  - update `.yamllint`
+
+- **Molecule**
+  - add a few more checks in `verify.yml`
+
 ## 13.1.0+1.15.8
 
-### Update
+- **Update**
+  - upgrade to Cilium `v1.15.8`
 
-- upgrade to Cilium `v1.15.8
-
-### Molecule
-
-- replace Vagrant `alvistack/ubuntu-22.04` boxes with `alvistack/ubuntu-24.04`
+- **Molecule**
+  - replace Vagrant `alvistack/ubuntu-22.04` boxes with `alvistack/ubuntu-24.04`
 
 ## 13.0.0+1.15.3
 
-### Breaking
+- **Breaking**
+- changes in `templates/cilium_values_default.yml.j2`: added `kubeProxyReplacement`, `nodePort` and `socketLB` (this is needed because BPF masquerade requires NodePort)
 
-- changes in `templates/cilium_values_default.yml.j2`:
-  - added `kubeProxyReplacement`, `nodePort` and `socketLB` (this is needed because BPF masquerade requires NodePort)
+- **Update**
+  - upgrade to Cilium `v1.15.3`
 
-### Update
-
-- upgrade to Cilium `v1.15.3`
-
-### Molecule
-
-- replace Vagrant `generic/ubuntu2204` boxes with `alvistack/ubuntu-22.04`
-
-## 12.0.0+1.15.0
-
-- upgrade to Cilium `v1.15.0`
-- refactor Molecule setup
-- introduce `cilium_chart_values_directory` variable
+- **Molecule**
+  - replace Vagrant `generic/ubuntu2204` boxes with `alvistack/ubuntu-22.04`
 
 ## Role Variables
 
 ```yaml
 # Helm chart version
-cilium_chart_version: "1.15.8"
+cilium_chart_version: "1.16.2"
 
 # Helm chart name
 cilium_chart_name: "cilium"
@@ -204,13 +209,13 @@ ansible-playbook --tags=role-cilium-kubernetes --extra-vars cilium_action=instal
 
 To check if everything was deployed use the usual `kubectl` commands like `kubectl -n <cilium_namespace> get pods -o wide`.
 
-As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/months the role also can do upgrades. The role basically executes what is described in [Cilium upgrade guide](https://docs.cilium.io/en/v1.15/operations/upgrade/). That means the Cilium pre-flight check will be installed and some checks are executed before the update actually takes place. Have a look at `tasks/upgrade.yml` to see what's happening before, during and after the update. Of course you should consult [Cilium upgrade guide](https://docs.cilium.io/en/v1.15/operations/upgrade/) in general to check for major changes and stuff like that before upgrading. Also make sure to check the [Upgrade Notes](https://docs.cilium.io/en/stable/operations/upgrade/#current-release-required-changes)!
+As [Cilium](https://docs.cilium.io) issues updates/upgrades every few weeks/months the role also can do upgrades. The role basically executes what is described in [Cilium upgrade guide](https://docs.cilium.io/en/v1.16/operations/upgrade/). That means the Cilium pre-flight check will be installed and some checks are executed before the update actually takes place. Have a look at `tasks/upgrade.yml` to see what's happening before, during and after the update. Of course you should consult [Cilium upgrade guide](https://docs.cilium.io/en/v1.16/operations/upgrade/) in general to check for major changes and stuff like that before upgrading. Also make sure to check the [Upgrade Notes](https://docs.cilium.io/en/stable/operations/upgrade/#current-release-required-changes)!
 
-If a upgrade wasn't successful a [Roll back](https://docs.cilium.io/en/v1.15/operations/upgrade/#step-3-rolling-back) to a previous version can be basically initiated by just changing `cilium_chart_version` variable. But you should definitely read the Cilium [roll back guide](https://docs.cilium.io/en/v1.15/operations/upgrade/#step-3-rolling-back). Switching between minor releases is normally not an issue but switching from one major release to a previous one might be not so easy.
+If a upgrade wasn't successful a [Roll back](https://docs.cilium.io/en/v1.16/operations/upgrade/#step-3-rolling-back) to a previous version can be basically initiated by just changing `cilium_chart_version` variable. But you should definitely read the Cilium [roll back guide](https://docs.cilium.io/en/v1.16/operations/upgrade/#step-3-rolling-back). Switching between minor releases is normally not an issue but switching from one major release to a previous one might be not so easy.
 
 Also check `templates/cilium_values_default_pre_flight_check.yml.j2`. If you need to adjust values for the `pre-flight` check you can either change that file or create a file `templates/cilium_values_user_pre_flight_check.yml.j2` with your own values.
 
-Before doing the upgrade you basically only need to change `cilium_chart_version` variable e.g. from `1.13.4` to `1.14.5` to upgrade from `1.13.4` to `1.14.5`. So to do the update run
+Before doing the upgrade you basically only need to change `cilium_chart_version` variable e.g. from `1.15.8` to `1.16.2` to upgrade from `1.15.8` to `1.16.2`. So to do the update run
 
 ```bash
 ansible-playbook --tags=role-cilium-kubernetes --extra-vars cilium_action=upgrade k8s.yml
