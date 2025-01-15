@@ -46,6 +46,11 @@ See full [CHANGELOG.md](https://github.com/githubixx/ansible-role-kubernetes-wor
 
 **Recent changes:**
 
+## 14.0.1+1.16.5
+
+- **Update**
+  - upgrade to Cilium `v1.16.5`
+
 ## 14.0.0+1.16.2
 
 **NOTE:** Upgrading from Cilium `1.15.x` to `1.16.x` is a major release upgrade! Please read the [1.16 Upgrade Notes](https://docs.cilium.io/en/v1.16/operations/upgrade/#current-release-required-changes) carefully and adjust your settings accordingly!
@@ -86,7 +91,7 @@ In general it makes sense to update to the latest Cilium `1.15.x` version first 
 
 ```yaml
 # Helm chart version
-cilium_chart_version: "1.16.2"
+cilium_chart_version: "1.16.5"
 
 # Helm chart name
 cilium_chart_name: "cilium"
