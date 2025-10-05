@@ -3,7 +3,7 @@ galaxy_info:
   author: Robert Wimmer
   description: Installs Cilium network on a Kubernetes cluster.
   license: GPLv3
-  min_ansible_version: "2.9"
+  min_ansible_version: "2.12"
   role_name: cilium_kubernetes
   namespace: githubixx
   platforms:

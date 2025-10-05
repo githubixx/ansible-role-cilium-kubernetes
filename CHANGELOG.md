@@ -1,5 +1,10 @@
 # Changelog
 
+## 15.0.0+1.17.8
+
+- **Breaking**
+  - `meta/main.yml`: Change `min_ansible_version` to 2.12. Ansible 2.9 is end-of-life (EOL). The `kubernetes.core.helm_repository` module used in `tasks/helm_repository.yml` requires kubernetes.core 2.3.0+, which needs Ansible 2.12+.
+
 ## 14.0.1+1.16.5
 
 - **Update**
