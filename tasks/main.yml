@@ -1,4 +1,7 @@
 ---
+# Copyright (C) 2020-2025 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 - name: Check if Helm command is installed
   ansible.builtin.shell: hash helm
   delegate_to: "{{ cilium_delegate_to }}"

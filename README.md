@@ -1,3 +1,8 @@
+<!--
+Copyright (C) 2020-2025 Robert Wimmer
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
 # cilium-kubernetes
 
 This Ansible role installs [Cilium](https://docs.cilium.io) network on a Kubernetes cluster. Behind the doors it uses the official [Helm chart](https://helm.cilium.io/). Currently procedures like installing, upgrading and deleting the Cilium deployment are supported.

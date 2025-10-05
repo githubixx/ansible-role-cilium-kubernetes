@@ -1,3 +1,8 @@
+<!--
+Copyright (C) 2020-2025 Robert Wimmer
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
 # Changelog
 
 ## 15.0.0+1.17.8
@@ -8,6 +13,10 @@
   - removed support for `Ubuntu 20.04` (reached end of life)
   - added support for `Ubuntu 22.04`
   - added support for `Ubuntu 24.04`
+
+- **Other**
+  - add SPDX license identifiers (`SPDX-License-Identifier: GPL-3.0-or-later`) and copyright notices to all source files following [REUSE specification](https://reuse.software/) best practices
+  - move full GPL-3.0-or-later license text to `LICENSES/GPL-3.0-or-later.txt`
 
 ## 14.0.1+1.16.5
 

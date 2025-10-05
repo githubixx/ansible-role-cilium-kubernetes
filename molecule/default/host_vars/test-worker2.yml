@@ -1,5 +1,5 @@
 ---
-# Copyright (C) 2023 Robert Wimmer
+# Copyright (C) 2020-2025 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 wireguard_address: "10.10.10.210/24"
