@@ -84,11 +84,10 @@
       vars:
         packages:
           - conntrack
-          - python3-pip
 
     - name: Install kubernetes Python package
-      ansible.builtin.pip:
-        name: kubernetes
+      ansible.builtin.package:
+        name: python3-kubernetes
         state: present
 
     - name: Install Helm role
