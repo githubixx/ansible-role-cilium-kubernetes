@@ -24,7 +24,7 @@
       ansible.builtin.copy:
         src: "files/etc/systemd/system/sys-fs-bpf.mount"
         dest: "/etc/systemd/system/sys-fs-bpf.mount"
-        mode: 0644
+        mode: "0644"
         owner: root
         group: root
       notify:
@@ -62,7 +62,7 @@
       ansible.builtin.template:
         src: "{{ lookup('first_found', params) }}"
         dest: "{{ cilium__values_tmp_file.path }}"
-        mode: 0600
+        mode: "0600"
       delegate_to: "{{ cilium_delegate_to }}"
       run_once: true
       vars:

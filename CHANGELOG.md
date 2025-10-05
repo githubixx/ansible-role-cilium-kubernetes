@@ -20,6 +20,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 - **Other**
   - add SPDX license identifiers (`SPDX-License-Identifier: GPL-3.0-or-later`) and copyright notices to all source files following [REUSE specification](https://reuse.software/) best practices
   - move full GPL-3.0-or-later license text to `LICENSES/GPL-3.0-or-later.txt`
+  - fix `ansible-lint` issues
 
 ## 14.0.1+1.16.5
 

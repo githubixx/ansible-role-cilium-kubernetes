@@ -84,6 +84,7 @@
       vars:
         packages:
           - conntrack
+          - python3-pip
 
     - name: Install kubernetes Python package
       ansible.builtin.package:
