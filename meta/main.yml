@@ -10,8 +10,8 @@ galaxy_info:
     - name: ArchLinux
     - name: Ubuntu
       versions:
-        - "bionic"
-        - "focal"
+        - "jammy"
+        - "noble"
   galaxy_tags:
     - kubernetes
     - worker
