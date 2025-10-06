@@ -1,4 +1,7 @@
 ---
+# Copyright (C) 2020-2025 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 - name: Pre flight pod check
   block:
     - name: Set the retry count
@@ -24,9 +27,9 @@
 
     - name: Register current Cilium pre flight pods running
       ansible.builtin.set_fact:
-        cilium_pre_flight_pods_running: "{{ cilium_pre_flight_check_daemonset | to_json | from_json | community.general.json_query(query) }}"
+        cilium_pre_flight_pods_running: "{{ cilium_pre_flight_check_daemonset | to_json | from_json | community.general.json_query(json_query) }}"
       vars:
-        query: "resources[0].status.numberReady"
+        json_query: "resources[0].status.numberReady"
       run_once: true
       delegate_to: "{{ cilium_delegate_to }}"
 

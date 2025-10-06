@@ -1,4 +1,7 @@
 ---
+# Copyright (C) 2020-2025 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 - name: Include Helm repository tasks
   ansible.builtin.include_tasks:
     file: helm_repository.yml
@@ -17,7 +20,7 @@
       ansible.builtin.template:
         src: "{{ lookup('first_found', params) }}"
         dest: "{{ cilium__values_tmp_file.path }}"
-        mode: 0600
+        mode: "0600"
       delegate_to: "{{ cilium_delegate_to }}"
       run_once: true
       vars:
@@ -57,7 +60,7 @@
       ansible.builtin.file:
         dest: "{{ cilium_template_output_directory }}"
         state: directory
-        mode: 0755
+        mode: "0755"
       run_once: true
       delegate_to: "{{ cilium_delegate_to }}"
 
@@ -65,7 +68,7 @@
       ansible.builtin.copy:
         dest: "{{ cilium_template_output_directory }}/template.yml"
         content: "{{ cilium__template.stdout }}"
-        mode: 0644
+        mode: "0644"
       run_once: true
       delegate_to: "{{ cilium_delegate_to }}"
 

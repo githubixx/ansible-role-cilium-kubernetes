@@ -1,5 +1,5 @@
 ---
-# Copyright (C) 2022 Robert Wimmer
+# Copyright (C) 2020-2025 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 dependency:
@@ -61,6 +61,7 @@ platforms:
     cpus: 2
     groups:
       - vpn
+      - haproxy
       - k8s_controller
       - k8s_worker
       - k8s

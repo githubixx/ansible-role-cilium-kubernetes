@@ -1,4 +1,7 @@
 ---
+# Copyright (C) 2020-2025 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 - name: Add Helm repository
   when:
     - cilium__helm_repo_installed.status is not defined

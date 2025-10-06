@@ -1,4 +1,7 @@
 ---
+# Copyright (C) 2020-2025 Robert Wimmer
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 - name: Ensure Cilium etcd secrets in k8s
   when:
     - cilium_etcd_enabled is defined
@@ -23,9 +26,9 @@
 
 - name: Register current Cilium pods running
   ansible.builtin.set_fact:
-    cilium_pods_running: "{{ cilium__daemonset | to_json | from_json | community.general.json_query(query) }}"
+    cilium_pods_running: "{{ cilium__daemonset | to_json | from_json | community.general.json_query(json_query) }}"
   vars:
-    query: "resources[0].status.numberReady"
+    json_query: "resources[0].status.numberReady"
   run_once: true
   delegate_to: "{{ cilium_delegate_to }}"
 
@@ -41,9 +44,9 @@
 
 - name: Register if there is a Cilium pre-flight check deployment leftover
   ansible.builtin.set_fact:
-    cilium_pre_flight_check_leftover: "{{ cilium__pre_flight_check_deployment | to_json | from_json | community.general.json_query(query) }}"
+    cilium_pre_flight_check_leftover: "{{ cilium__pre_flight_check_deployment | to_json | from_json | community.general.json_query(json_query) }}"
   vars:
-    query: "resources[0].metadata.name"
+    json_query: "resources[0].metadata.name"
   run_once: true
   delegate_to: "{{ cilium_delegate_to }}"
 
@@ -113,17 +116,17 @@
 
 - name: Register Cilium pre flight ready replicas
   ansible.builtin.set_fact:
-    cilium_pre_flight_ready_replicas: "{{ cilium__pre_flight_deployment | to_json | from_json | community.general.json_query(query) }}"
+    cilium_pre_flight_ready_replicas: "{{ cilium__pre_flight_deployment | to_json | from_json | community.general.json_query(json_query) }}"
   vars:
-    query: "resources[0].status.readyReplicas"
+    json_query: "resources[0].status.readyReplicas"
   run_once: true
   delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Register Cilium pre flight replicas
   ansible.builtin.set_fact:
-    cilium_pre_flight_replicas: "{{ cilium__pre_flight_deployment | to_json | from_json | community.general.json_query(query) }}"
+    cilium_pre_flight_replicas: "{{ cilium__pre_flight_deployment | to_json | from_json | community.general.json_query(json_query) }}"
   vars:
-    query: "resources[0].status.replicas"
+    json_query: "resources[0].status.replicas"
   run_once: true
   delegate_to: "{{ cilium_delegate_to }}"
 
@@ -169,7 +172,7 @@
       ansible.builtin.template:
         src: "{{ lookup('first_found', params) }}"
         dest: "{{ cilium__values_tmp_file.path }}"
-        mode: 0600
+        mode: "0600"
       run_once: true
       delegate_to: "{{ cilium_delegate_to }}"
       vars:

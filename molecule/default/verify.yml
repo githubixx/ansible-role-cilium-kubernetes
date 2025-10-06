@@ -1,5 +1,5 @@
 ---
-# Copyright (C) 2022 Robert Wimmer
+# Copyright (C) 2020-2025 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 - name: Verify setup
@@ -31,17 +31,18 @@
           - (cilium__daemonset_info.resources[0].status.numberReady | default(0) | int ) >= 1
 
     - name: Fetch Cilium status
-      become: yes
+      become: true
       become_user: vagrant
       ansible.builtin.command:
         cmd: cilium -n cilium status --output json
       register: cilium__json_status
+      changed_when: false
 
     - name: Register cilium pods unavailable
       ansible.builtin.set_fact:
-        cilium__cilium_pods_running: "{{ cilium__json_status | to_json | from_json | community.general.json_query(query) }}"
+        cilium__cilium_pods_running: "{{ cilium__json_status | to_json | from_json | community.general.json_query(json_query) }}"
       vars:
-        query: "pod_state.cilium.Unavailable"
+        json_query: "pod_state.cilium.Unavailable"
 
     - name: Check if cilium pods unavailable is 0
       ansible.builtin.fail:
@@ -50,9 +51,9 @@
 
     - name: Register cilium-operator pods unavailable
       ansible.builtin.set_fact:
-        cilium__cilium_operator_pods_running: "{{ cilium__json_status | to_json | from_json | community.general.json_query(query) }}"
+        cilium__cilium_operator_pods_running: "{{ cilium__json_status | to_json | from_json | community.general.json_query(json_query) }}"
       vars:
-        query: 'pod_state."cilium-operator".Unavailable'
+        json_query: 'pod_state."cilium-operator".Unavailable'
 
     - name: Check if cilium-operator pods unavailable is 0
       ansible.builtin.fail:

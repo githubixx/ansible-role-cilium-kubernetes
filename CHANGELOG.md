@@ -1,4 +1,33 @@
+<!--
+Copyright (C) 2020-2025 Robert Wimmer
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
 # Changelog
+
+## 15.0.0+1.16.15
+
+- **Breaking**
+  - `meta/main.yml`: Change `min_ansible_version` to 2.12. Ansible 2.9 is end-of-life (EOL). The `kubernetes.core.helm_repository` module used in `tasks/helm_repository.yml` requires kubernetes.core 2.3.0+, which needs Ansible 2.12+.
+  - removed support for `Ubuntu 18.04` (reached end of life)
+  - removed support for `Ubuntu 20.04` (reached end of life)
+  - added support for `Ubuntu 22.04`
+  - added support for `Ubuntu 24.04`
+
+- **Update**
+  - upgrade to Cilium `v1.16.15`
+  - update `.github/workflows/release.yml`
+
+- **Other**
+  - add SPDX license identifiers (`SPDX-License-Identifier: GPL-3.0-or-later`) and copyright notices to all source files following [REUSE specification](https://reuse.software/) best practices
+  - move full GPL-3.0-or-later license text to `LICENSES/GPL-3.0-or-later.txt`
+  - fix `ansible-lint` issues
+  - remove `collections.yml` + `requirements.yml`
+  - add `.ansible` to `.gitignore`
+
+- **Molecule**
+  - `prepare.yml`: use `ansible.builtin.pip` instead of `ansible.builtin.package` to install kubernetes collection
+  - various changes to Molecule `default` scenario
 
 ## 14.0.1+1.16.5
 
