@@ -61,6 +61,7 @@ platforms:
     cpus: 2
     groups:
       - vpn
+      - haproxy
       - k8s_controller
       - k8s_worker
       - k8s

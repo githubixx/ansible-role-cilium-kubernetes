@@ -7,11 +7,12 @@ wireguard_port: 51820
 wireguard_persistent_keepalive: "30"
 wireguard_endpoint: "172.16.10.10"
 
-ha_proxy_frontend_bind_address: "127.0.0.1"
-ha_proxy_frontend_port: "16443"
+haproxy_frontend_bind_address: "10.10.10.10"
+haproxy_frontend_port: "16443"
+haproxy_k8s_api_endpoint_port: "6443"
 
-k8s_ctl_api_endpoint_host: "127.0.0.1"
+k8s_ctl_api_endpoint_host: "10.10.10.10"
 k8s_ctl_api_endpoint_port: "16443"
 
-k8s_worker_api_endpoint_host: "{{ k8s_ctl_api_endpoint_host }}"
-k8s_worker_api_endpoint_port: "{{ k8s_ctl_api_endpoint_port }}"
+k8s_worker_api_endpoint_host: "{{ haproxy_frontend_bind_address }}"
+k8s_worker_api_endpoint_port: "{{ haproxy_frontend_port }}"
