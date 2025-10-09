@@ -5,6 +5,23 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Changelog
 
+## 16.0.0+1.17.8
+
+**NOTE:** Upgrading from Cilium `1.16.x` to `1.17.x` is a major release upgrade! Please read the [1.17 Upgrade Notes](https://docs.cilium.io/en/v1.17/operations/upgrade/#current-release-required-changes) carefully and adjust your settings accordingly!
+
+In general it makes sense to update to the latest Cilium `1.16.x` version first before upgrading to `1.17.x`. If you've used the default (or slightly adjusted) settings that this Ansible role provides then the upgrade should be pretty straight forward.
+
+Further reading:
+
+[Cilium 1.17.0 CHANGELOG](https://github.com/cilium/cilium/blob/v1.17.0/CHANGELOG.md)  
+[Cilium 1.17.0 release](https://github.com/cilium/cilium/releases/tag/v1.17.0)
+
+- **Update**
+  - upgrade to Cilium `v1.17.8`
+
+- **Molecule**
+  - Molecule: update CoreDNS to `v1.13.1`
+
 ## 15.0.0+1.16.15
 
 - **Breaking**
@@ -40,7 +57,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 All new features are explained in the Cilium `1.16` announcement blog: [Cilium 1.16 – High-Performance Networking With Netkit, Gateway API Gamma Support, BGPV2 and More!](https://isovalent.com/blog/post/cilium-1-16/).
 
-In general it makes sense to update to the latest Cilium `1.15.x` version first before upgrading to `0.16.x`. If you've used the default (or slightly adjusted) settings that this Ansible role provides then the upgrade should be pretty straight forward.
+In general it makes sense to update to the latest Cilium `1.15.x` version first before upgrading to `1.16.x`. If you've used the default (or slightly adjusted) settings that this Ansible role provides then the upgrade should be pretty straight forward.
 
 - **Update**
   - upgrade to Cilium `v1.16.2`
