@@ -9,7 +9,7 @@ This Ansible role installs [Cilium](https://docs.cilium.io) network on a Kuberne
 
 ## Versions
 
-I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `14.0.0+1.16.2` means this is release `14.0.0` of this role and it contains Cilium chart version `1.16.2`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
+I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `16.0.0+1.17.8` means this is release `16.0.0` of this role and it contains Cilium chart version `1.17.8`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
 
 ## Requirements
 
@@ -40,7 +40,7 @@ And of course you need a Kubernetes Cluster ;-)
 roles:
   - name: githubixx.cilium_kubernetes
     src: https://github.com/githubixx/ansible-role-cilium-kubernetes.git
-    version: 14.0.0+1.16.15
+    version: 16.0.0+1.17.8
 ```
 
 ## Changelog
@@ -50,6 +50,20 @@ roles:
 See full [CHANGELOG.md](https://github.com/githubixx/ansible-role-kubernetes-worker/blob/master/CHANGELOG.md)
 
 **Recent changes:**
+
+## 16.0.0+1.17.8
+
+**NOTE:** Upgrading from Cilium `1.16.x` to `1.17.x` is a major release upgrade! Please read the [1.17 Upgrade Notes](https://docs.cilium.io/en/v1.17/operations/upgrade/#current-release-required-changes) carefully and adjust your settings accordingly!
+
+In general it makes sense to update to the latest Cilium `1.16.x` version first before upgrading to `1.17.x`. If you've used the default (or slightly adjusted) settings that this Ansible role provides then the upgrade should be pretty straight forward.
+
+Further reading:
+
+[Cilium 1.17.0 CHANGELOG](https://github.com/cilium/cilium/blob/v1.17.0/CHANGELOG.md)  
+[Cilium 1.17.0 release](https://github.com/cilium/cilium/releases/tag/v1.17.0)
+
+- **Update**
+  - upgrade to Cilium `v1.17.8`
 
 ## 15.0.0+1.16.15
 
@@ -75,33 +89,11 @@ See full [CHANGELOG.md](https://github.com/githubixx/ansible-role-kubernetes-wor
   - `prepare.yml`: use `ansible.builtin.pip` instead of `ansible.builtin.package` to install kubernetes collection
   - various changes to Molecule `default` scenario
 
-## 14.0.1+1.16.5
-
-- **Update**
-  - upgrade to Cilium `v1.16.5`
-
-## 14.0.0+1.16.2
-
-**NOTE:** Upgrading from Cilium `1.15.x` to `1.16.x` is a major release upgrade! Please read the [1.16 Upgrade Notes](https://docs.cilium.io/en/v1.16/operations/upgrade/#current-release-required-changes) carefully and adjust your settings accordingly!
-
-All new features are explained in the Cilium `1.16` announcement blog: [Cilium 1.16 – High-Performance Networking With Netkit, Gateway API Gamma Support, BGPV2 and More!](https://isovalent.com/blog/post/cilium-1-16/).
-
-In general it makes sense to update to the latest Cilium `1.15.x` version first before upgrading to `1.16.x`. If you've used the default (or slightly adjusted) settings that this Ansible role provides then the upgrade should be pretty straight forward.
-
-- **Update**
-  - upgrade to Cilium `v1.16.2`
-
-- **Other**
-  - update `.yamllint`
-
-- **Molecule**
-  - add a few more checks in `verify.yml`
-
 ## Role Variables
 
 ```yaml
 # Helm chart version
-cilium_chart_version: "1.16.15"
+cilium_chart_version: "1.17.8"
 
 # Helm chart name
 cilium_chart_name: "cilium"
@@ -194,7 +186,7 @@ cilium_template_output_directory: "{{ '~/cilium/template' | expanduser }}"
 
 ## Usage
 
-The first thing to do is to check `templates/cilium_values_default.yml.j2`. This file contains the values/settings for the Cilium Helm chart that are different to the default ones which are located [here](https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml). The default values of this Ansible role are using a TLS enabled `etcd` cluster. If you have a self hosted/bare metal Kubernetes cluster chances are high that there is already running an `etcd` cluster for the Kubernetes API server which is the case for me. I'm using my Ansible [etcd role](https://github.com/githubixx/ansible-role-etcd) to install such an `etcd` cluster and my [Kubernetes Certificate Authority role](https://github.com/githubixx/ansible-role-kubernetes-ca) to generate the certificates. So if you used my roles you can use this Cilium role basically as is.
+The first thing to do is to check `templates/cilium_values_default.yml.j2`. This file contains the values/settings for the Cilium Helm chart that are different to the default ones which are located at [cilium/values.yaml](https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml). The default values of this Ansible role are using a TLS enabled `etcd` cluster. If you have a self hosted/bare metal Kubernetes cluster chances are high that there is already running an `etcd` cluster for the Kubernetes API server which is the case for me. I'm using my Ansible [etcd role](https://github.com/githubixx/ansible-role-etcd) to install such an `etcd` cluster and my [Kubernetes Certificate Authority role](https://github.com/githubixx/ansible-role-kubernetes-ca) to generate the certificates. So if you used my roles you can use this Cilium role basically as is.
 
 The `templates/cilium_values_default.yml.j2` template also contains some `if` clauses to use an `etcd` cluster that is not TLS enabled. See `defaults/main.yml` to check which values can be changed. You can also introduce your own variables. To use your own values just create a file called `values.yml.j2` or `values.yaml.j2` and put it into the directory specified in `cilium_chart_values_directory`. Then this role will use that file to render the Helm values.
 
@@ -269,7 +261,7 @@ Example 2 (assign tag to role):
 
 ## Testing
 
-This role has a small test setup that is created using [Molecule](https://github.com/ansible-community/molecule), libvirt (vagrant-libvirt) and QEMU/KVM. Please see my blog post [Testing Ansible roles with Molecule, libvirt (vagrant-libvirt) and QEMU/KVM](https://www.tauceti.blog/posts/testing-ansible-roles-with-molecule-libvirt-vagrant-qemu-kvm/) how to setup. The test configuration is [here](https://github.com/githubixx/ansible-role-cilium-kubernetes/tree/master/molecule/default).
+This role has a small test setup that is created using [Molecule](https://github.com/ansible-community/molecule), libvirt (vagrant-libvirt) and QEMU/KVM. Please see my blog post [Testing Ansible roles with Molecule, libvirt (vagrant-libvirt) and QEMU/KVM](https://www.tauceti.blog/posts/testing-ansible-roles-with-molecule-libvirt-vagrant-qemu-kvm/) how to setup. The test configuration is [molecule/default](https://github.com/githubixx/ansible-role-cilium-kubernetes/tree/master/molecule/default).
 
 Afterwards molecule can be executed. The following command will do a basic setup and create a template of the resources (default action see above) that will be created:
 
