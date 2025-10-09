@@ -65,6 +65,9 @@ Further reading:
 - **Update**
   - upgrade to Cilium `v1.17.8`
 
+- **Molecule**
+  - Molecule: update CoreDNS to `v1.13.1`
+
 ## 15.0.0+1.16.15
 
 - **Breaking**
