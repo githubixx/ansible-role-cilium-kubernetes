@@ -5,16 +5,34 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Changelog
 
+## 17.0.0+1.18.10
+
+**NOTE:** Upgrading from Cilium `1.17.x` to `1.18.x` is a major release upgrade! Please read the [1.18 Upgrade Notes](https://docs.cilium.io/en/v1.18/operations/upgrade/#current-release-required-changes) carefully and adjust your settings accordingly!
+
+In general it makes sense to update to the latest Cilium `1.17.x` version first before upgrading to `1.18.x`. If you've used the default (or slightly adjusted) settings that this Ansible role provides then the upgrade should be pretty straight forward.
+
+- **Further reading**
+  - [Cilium 1.18.0 CHANGELOG](https://github.com/cilium/cilium/blob/v1.18.0/CHANGELOG.md)
+  - [Cilium 1.18.0 release](https://github.com/cilium/cilium/releases/tag/v1.18.0)
+
+- **Update**
+  - upgrade to Cilium `v1.18.10`
+
+- **OTHER**
+  - replace injected `ansible_*` facts usage with `ansible_facts[...]` (prepares for ansible-core 2.24 where `INJECT_FACTS_AS_VARS` default changes)
+
+- **MOLECULE**
+  - use own [githubixx Vagrant boxes](https://portal.cloud.hashicorp.com/vagrant/discover/githubixx)
+
 ## 16.0.0+1.17.8
 
 **NOTE:** Upgrading from Cilium `1.16.x` to `1.17.x` is a major release upgrade! Please read the [1.17 Upgrade Notes](https://docs.cilium.io/en/v1.17/operations/upgrade/#current-release-required-changes) carefully and adjust your settings accordingly!
 
 In general it makes sense to update to the latest Cilium `1.16.x` version first before upgrading to `1.17.x`. If you've used the default (or slightly adjusted) settings that this Ansible role provides then the upgrade should be pretty straight forward.
 
-Further reading:
-
-[Cilium 1.17.0 CHANGELOG](https://github.com/cilium/cilium/blob/v1.17.0/CHANGELOG.md)  
-[Cilium 1.17.0 release](https://github.com/cilium/cilium/releases/tag/v1.17.0)
+- **Further reading**
+  - [Cilium 1.17.0 CHANGELOG](https://github.com/cilium/cilium/blob/v1.17.0/CHANGELOG.md)  
+  - [Cilium 1.17.0 release](https://github.com/cilium/cilium/releases/tag/v1.17.0)
 
 - **Update**
   - upgrade to Cilium `v1.17.8`
