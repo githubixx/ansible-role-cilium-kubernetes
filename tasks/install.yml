@@ -17,8 +17,9 @@
 
 - name: BPFFS handling for Ubuntu 18.04
   when:
-    - ansible_lsb.release is defined
-    - ansible_lsb.release is version('20.04', '<')
+    - ansible_facts['lsb'] is defined
+    - ansible_facts['lsb']['release'] is defined
+    - ansible_facts['lsb']['release'] is version('20.04', '<')
   block:
     - name: Install systemd unit file for mounting BPFFS
       ansible.builtin.copy:
