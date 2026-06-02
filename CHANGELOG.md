@@ -11,6 +11,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 In general it makes sense to update to the latest Cilium `1.17.x` version first before upgrading to `1.18.x`. If you've used the default (or slightly adjusted) settings that this Ansible role provides then the upgrade should be pretty straight forward.
 
+- **Breaking**
+  - `upgradeCompatibility` is no longer rendered with the old implicit `1.7` default. Upgrades now require setting `cilium_upgrade_compatibility` variable to the initial Cilium minor version that was first installed in the cluster, e.g. `1.17`. Fresh installations can leave this variable empty.
+
 - **Further reading**
   - [Cilium 1.18.0 CHANGELOG](https://github.com/cilium/cilium/blob/v1.18.0/CHANGELOG.md)
   - [Cilium 1.18.0 release](https://github.com/cilium/cilium/releases/tag/v1.18.0)
@@ -20,6 +23,8 @@ In general it makes sense to update to the latest Cilium `1.17.x` version first 
 
 - **OTHER**
   - replace injected `ansible_*` facts usage with `ansible_facts[...]` (prepares for ansible-core 2.24 where `INJECT_FACTS_AS_VARS` default changes)
+  - `tasks/upgrade.yml`: handle missing pre-flight leftovers without failing when no `cilium-pre-flight-check` deployment exists
+  - `tasks/pre_flight_check.yml`: replace the fail/rescue retry loop with regular polling so expected pre-flight retries do not cause `molecule converge` to exit with Ansible return code `2`
 
 - **MOLECULE**
   - use own [githubixx Vagrant boxes](https://portal.cloud.hashicorp.com/vagrant/discover/githubixx)
