@@ -1,5 +1,5 @@
 <!--
-Copyright (C) 2020-2025 Robert Wimmer
+Copyright (C) 2020-2026 Robert Wimmer
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
@@ -9,7 +9,7 @@ This Ansible role installs [Cilium](https://docs.cilium.io) network on a Kuberne
 
 ## Versions
 
-I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `17.0.0+1.18.10` means this is release `17.0.0` of this role and it contains Cilium chart version `1.18.10`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
+I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `17.0.1+1.18.10` means this is release `17.0.1` of this role and it contains Cilium chart version `1.18.10`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
 
 ## Requirements
 
@@ -40,7 +40,7 @@ And of course you need a Kubernetes Cluster ;-)
 roles:
   - name: githubixx.cilium_kubernetes
     src: https://github.com/githubixx/ansible-role-cilium-kubernetes.git
-    version: 17.0.0+1.18.10
+    version: 17.0.1+1.18.10
 ```
 
 ## Changelog
@@ -50,6 +50,11 @@ roles:
 See full [CHANGELOG.md](https://github.com/githubixx/ansible-role-kubernetes-worker/blob/master/CHANGELOG.md)
 
 **Recent changes:**
+
+## 17.0.1+1.18.10
+
+- **Other**
+  - update copyright year headers from `2020-2025` to `2020-2026`
 
 ## 17.0.0+1.18.10
 
@@ -69,12 +74,9 @@ In general it makes sense to update to the latest Cilium `1.17.x` version first 
 
 - **OTHER**
   - replace injected `ansible_*` facts usage with `ansible_facts[...]` (prepares for ansible-core 2.24 where `INJECT_FACTS_AS_VARS` default changes)
-  - `tasks/upgrade.yml`: handle missing pre-flight leftovers without failing when no `cilium-pre-flight-check` deployment exists
-  - `tasks/pre_flight_check.yml`: replace the fail/rescue retry loop with regular polling so expected pre-flight retries do not cause `molecule converge` to exit with Ansible return code `2`
 
 - **MOLECULE**
   - use own [githubixx Vagrant boxes](https://portal.cloud.hashicorp.com/vagrant/discover/githubixx)
-  - more tests for `molecule verify`
 
 ## 16.0.0+1.17.8
 

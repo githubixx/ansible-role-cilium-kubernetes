@@ -1,9 +1,14 @@
 <!--
-Copyright (C) 2020-2025 Robert Wimmer
+Copyright (C) 2020-2026 Robert Wimmer
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
 # Changelog
+
+## 17.0.1+1.18.10
+
+- **Other**
+  - update copyright year headers from `2020-2025` to `2020-2026`
 
 ## 17.0.0+1.18.10
 
@@ -23,12 +28,9 @@ In general it makes sense to update to the latest Cilium `1.17.x` version first 
 
 - **OTHER**
   - replace injected `ansible_*` facts usage with `ansible_facts[...]` (prepares for ansible-core 2.24 where `INJECT_FACTS_AS_VARS` default changes)
-  - `tasks/upgrade.yml`: handle missing pre-flight leftovers without failing when no `cilium-pre-flight-check` deployment exists
-  - `tasks/pre_flight_check.yml`: replace the fail/rescue retry loop with regular polling so expected pre-flight retries do not cause `molecule converge` to exit with Ansible return code `2`
 
 - **MOLECULE**
   - use own [githubixx Vagrant boxes](https://portal.cloud.hashicorp.com/vagrant/discover/githubixx)
-  - more tests for `molecule verify`
 
 ## 16.0.0+1.17.8
 
