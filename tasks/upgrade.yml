@@ -44,15 +44,13 @@
 
 - name: Register if there is a Cilium pre-flight check deployment leftover
   ansible.builtin.set_fact:
-    cilium_pre_flight_check_leftover: "{{ cilium__pre_flight_check_deployment | to_json | from_json | community.general.json_query(json_query) }}"
-  vars:
-    json_query: "resources[0].metadata.name"
+    cilium_pre_flight_check_leftover: "{{ (cilium__pre_flight_check_deployment.resources | default([]) | length) > 0 }}"
   run_once: true
   delegate_to: "{{ cilium_delegate_to }}"
 
 - name: Delete Cilium pre-flight check leftover
   when:
-    - cilium_pre_flight_check_leftover.find("cilium-pre-flight-check") != -1
+    - cilium_pre_flight_check_leftover
   kubernetes.core.helm:
     name: "cilium-preflight"
     release_namespace: "{{ cilium_namespace }}"
@@ -63,7 +61,7 @@
 
 - name: Give Kubernetes 30 secs to delete Cilium pre-flight check
   when:
-    - cilium_pre_flight_check_leftover.find("cilium-pre-flight-check") != -1
+    - cilium_pre_flight_check_leftover
   ansible.builtin.wait_for:
     timeout: 30
   run_once: true
@@ -81,9 +79,12 @@
   vars:
     params:
       files:
+        - values_pre_flight_check.yml.j2
+        - values_pre_flight_check.yaml.j2
         - cilium_values_user_pre_flight_check.yml.j2
         - cilium_values_default_pre_flight_check.yml.j2
       paths:
+        - "{{ cilium_chart_values_directory }}"
         - templates
   changed_when: false
   run_once: true

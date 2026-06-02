@@ -6,6 +6,15 @@
   hosts: test-assets
   environment:
     K8S_AUTH_KUBECONFIG: "{{ k8s_admin_conf_dir }}/admin.kubeconfig"
+  vars:
+    cilium__verify_namespace: "cilium-verify"
+    cilium__verify_server_pod: "cilium-verify-server"
+    cilium__verify_client_pod: "cilium-verify-client"
+    cilium__verify_service: "cilium-verify-server"
+    cilium__verify_server_response: "ok-from-cilium-verify"
+    cilium__verify_worker_nodes: "{{ groups['k8s_worker'] | difference(groups['k8s_controller'] | default([])) }}"
+    cilium__verify_server_node: "{{ cilium__verify_worker_nodes[0] if (cilium__verify_worker_nodes | length) > 0 else '' }}"
+    cilium__verify_client_node: "{{ cilium__verify_worker_nodes[1] if (cilium__verify_worker_nodes | length) > 1 else '' }}"
   tasks:
     - name: Fetch Cilium DaemonSet information
       kubernetes.core.k8s_info:
@@ -38,29 +47,329 @@
       register: cilium__json_status
       changed_when: false
 
-    - name: Register cilium pods unavailable
+    - name: Parse Cilium status JSON
       ansible.builtin.set_fact:
-        cilium__cilium_pods_running: "{{ cilium__json_status | to_json | from_json | community.general.json_query(json_query) }}"
+        cilium__status: "{{ cilium__json_status.stdout | from_json }}"
+
+    - name: Core Cilium workloads should be fully ready
+      ansible.builtin.assert:
+        that:
+          - cilium__status.pod_state[item].Unavailable | int == 0
+          - cilium__status.pod_state[item].Ready | int == cilium__status.pod_state[item].Desired | int
+          - cilium__status.pod_state[item].Available | int == cilium__status.pod_state[item].Desired | int
+        fail_msg: "Cilium component {{ item }} is not fully ready: {{ cilium__status.pod_state[item] }}"
+      loop:
+        - cilium
+        - cilium-envoy
+        - cilium-operator
+
+    - name: Every Cilium agent should report healthy core subsystems
+      ansible.builtin.assert:
+        that:
+          - item.value.cilium.state == "Ok"
+          - item.value.kubernetes.state == "Ok"
+          - item.value.cluster.ciliumHealth.state == "Ok"
+          - item.value['cni-file']['state'] == "Ok"
+          - item.value.kvstore.state == "Ok"
+        fail_msg: "Cilium agent {{ item.key }} reported unhealthy status: {{ item.value }}"
+      loop: "{{ cilium__status.cilium_status | dict2items }}"
+
+    - name: Enabled Cilium components should not report errors or warnings
+      ansible.builtin.assert:
+        that:
+          - cilium__component_status.Errors | length == 0
+          - cilium__component_status.Warnings | length == 0
+        fail_msg: "Cilium component {{ item.key }} reported issues: {{ cilium__component_status }}"
       vars:
-        json_query: "pod_state.cilium.Unavailable"
-
-    - name: Check if cilium pods unavailable is 0
-      ansible.builtin.fail:
-        msg: "Ja: {{ cilium__cilium_pods_running }}"
-      when: cilium__cilium_pods_running | int != 0
-
-    - name: Register cilium-operator pods unavailable
-      ansible.builtin.set_fact:
-        cilium__cilium_operator_pods_running: "{{ cilium__json_status | to_json | from_json | community.general.json_query(json_query) }}"
-      vars:
-        json_query: 'pod_state."cilium-operator".Unavailable'
-
-    - name: Check if cilium-operator pods unavailable is 0
-      ansible.builtin.fail:
-        msg: "Ja: {{ cilium__cilium_operator_pods_running }}"
-      when: cilium__cilium_operator_pods_running | int != 0
+        cilium__component_status: "{{ (item.value | dict2items | first).value }}"
+      when: not cilium__component_status.Disabled | bool
+      loop: "{{ cilium__status.errors | dict2items }}"
 
     - name: Print Cilium status output
       ansible.builtin.debug:
-        var: cilium__json_status.stdout
+        var: cilium__status
       when: ansible_verbosity > 1
+
+    - name: Fetch CoreDNS deployment information
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        name: coredns
+        namespace: kube-system
+      register: cilium__coredns_deployment_info
+
+    - name: Determine if networking verification should run
+      ansible.builtin.set_fact:
+        cilium__networking_tests_requested: "{{ cilium_setup_networking | default('') == 'install' }}"
+        cilium__networking_tests_enabled: "{{ (cilium_setup_networking | default('') == 'install') or ((cilium__coredns_deployment_info.resources | default([])) | length > 0) }}"
+
+    - name: Skip extended networking verification if CoreDNS is not installed
+      ansible.builtin.debug:
+        msg: >-
+          Skipping pod, service and DNS connectivity checks because the scenario
+          does not appear to have CoreDNS installed.
+      when: not cilium__networking_tests_enabled
+
+    - name: Verify Cilium networking functionality
+      when: cilium__networking_tests_enabled
+      block:
+        - name: There should be at least two non-controller worker nodes for cross-node probes
+          ansible.builtin.assert:
+            that:
+              - (cilium__verify_worker_nodes | length) >= 2
+
+        - name: CoreDNS deployment should exist when networking verification runs
+          ansible.builtin.assert:
+            that:
+              - (cilium__coredns_deployment_info.resources | length) == 1
+
+        - name: CoreDNS deployment should have at least one ready replica
+          ansible.builtin.assert:
+            that:
+              - (cilium__coredns_deployment_info.resources[0].status.readyReplicas | default(0) | int) >= 1
+
+        - name: Create verification namespace
+          kubernetes.core.k8s:
+            api_version: v1
+            kind: Namespace
+            name: "{{ cilium__verify_namespace }}"
+            state: present
+
+        - name: Create verification server pod
+          kubernetes.core.k8s:
+            state: present
+            definition:
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: "{{ cilium__verify_server_pod }}"
+                namespace: "{{ cilium__verify_namespace }}"
+                labels:
+                  app: "{{ cilium__verify_server_pod }}"
+              spec:
+                nodeName: "{{ cilium__verify_server_node }}"
+                containers:
+                  - name: http-echo
+                    image: hashicorp/http-echo:1.0.0
+                    args:
+                      - "-text={{ cilium__verify_server_response }}"
+                      - "-listen=:8080"
+                    ports:
+                      - containerPort: 8080
+
+        - name: Create verification client pod
+          kubernetes.core.k8s:
+            state: present
+            definition:
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: "{{ cilium__verify_client_pod }}"
+                namespace: "{{ cilium__verify_namespace }}"
+                labels:
+                  app: "{{ cilium__verify_client_pod }}"
+              spec:
+                nodeName: "{{ cilium__verify_client_node }}"
+                containers:
+                  - name: busybox
+                    image: busybox:1.36
+                    command:
+                      - sh
+                      - -c
+                      - sleep 3600
+
+        - name: Create verification service
+          kubernetes.core.k8s:
+            state: present
+            definition:
+              apiVersion: v1
+              kind: Service
+              metadata:
+                name: "{{ cilium__verify_service }}"
+                namespace: "{{ cilium__verify_namespace }}"
+              spec:
+                selector:
+                  app: "{{ cilium__verify_server_pod }}"
+                ports:
+                  - name: http
+                    port: 8080
+                    protocol: TCP
+                    targetPort: 8080
+
+        - name: Wait for verification server pod to become ready
+          become: true
+          become_user: vagrant
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - "{{ cilium__verify_namespace }}"
+              - wait
+              - --for=condition=Ready
+              - "pod/{{ cilium__verify_server_pod }}"
+              - --timeout=600s
+          changed_when: false
+
+        - name: Wait for verification client pod to become ready
+          become: true
+          become_user: vagrant
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - "{{ cilium__verify_namespace }}"
+              - wait
+              - --for=condition=Ready
+              - "pod/{{ cilium__verify_client_pod }}"
+              - --timeout=600s
+          changed_when: false
+
+        - name: Fetch verification server pod information
+          kubernetes.core.k8s_info:
+            api_version: v1
+            kind: Pod
+            name: "{{ cilium__verify_server_pod }}"
+            namespace: "{{ cilium__verify_namespace }}"
+          register: cilium__verify_server_pod_info
+
+        - name: Fetch verification client pod information
+          kubernetes.core.k8s_info:
+            api_version: v1
+            kind: Pod
+            name: "{{ cilium__verify_client_pod }}"
+            namespace: "{{ cilium__verify_namespace }}"
+          register: cilium__verify_client_pod_info
+
+        - name: Fetch verification service information
+          kubernetes.core.k8s_info:
+            api_version: v1
+            kind: Service
+            name: "{{ cilium__verify_service }}"
+            namespace: "{{ cilium__verify_namespace }}"
+          register: cilium__verify_service_info
+
+        - name: Verify probe pods and service assignments
+          ansible.builtin.assert:
+            that:
+              - (cilium__verify_server_pod_info.resources | length) == 1
+              - (cilium__verify_client_pod_info.resources | length) == 1
+              - cilium__verify_server_pod_info.resources[0].spec.nodeName == cilium__verify_server_node
+              - cilium__verify_client_pod_info.resources[0].spec.nodeName == cilium__verify_client_node
+              - cilium__verify_server_pod_info.resources[0].spec.nodeName != cilium__verify_client_pod_info.resources[0].spec.nodeName
+              - cilium__verify_server_pod_info.resources[0].status.podIP | default('') | length > 0
+              - cilium__verify_client_pod_info.resources[0].status.podIP | default('') | length > 0
+              - (cilium__verify_service_info.resources | length) == 1
+              - cilium__verify_service_info.resources[0].spec.clusterIP | default('') | length > 0
+
+        - name: Fetch server response directly via pod IP
+          become: true
+          become_user: vagrant
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - "{{ cilium__verify_namespace }}"
+              - exec
+              - "{{ cilium__verify_client_pod }}"
+              - --
+              - wget
+              - -qO-
+              - --timeout=5
+              - "http://{{ cilium__verify_server_pod_info.resources[0].status.podIP }}:8080"
+          register: cilium__verify_direct_connectivity
+          changed_when: false
+
+        - name: Pod-to-pod connectivity should return the verification payload
+          ansible.builtin.assert:
+            that:
+              - cilium__verify_direct_connectivity.stdout | trim == cilium__verify_server_response
+
+        - name: Fetch server response via Service ClusterIP
+          become: true
+          become_user: vagrant
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - "{{ cilium__verify_namespace }}"
+              - exec
+              - "{{ cilium__verify_client_pod }}"
+              - --
+              - wget
+              - -qO-
+              - --timeout=5
+              - "http://{{ cilium__verify_service_info.resources[0].spec.clusterIP }}:8080"
+          register: cilium__verify_service_connectivity
+          changed_when: false
+
+        - name: Service routing should return the verification payload
+          ansible.builtin.assert:
+            that:
+              - cilium__verify_service_connectivity.stdout | trim == cilium__verify_server_response
+
+        - name: Resolve the verification service via CoreDNS
+          become: true
+          become_user: vagrant
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - "{{ cilium__verify_namespace }}"
+              - exec
+              - "{{ cilium__verify_client_pod }}"
+              - --
+              - nslookup
+              - "{{ cilium__verify_service }}.{{ cilium__verify_namespace }}.svc.cluster.local"
+          register: cilium__verify_service_dns_lookup
+          changed_when: false
+
+        - name: Resolve the kubernetes service via CoreDNS
+          become: true
+          become_user: vagrant
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - "{{ cilium__verify_namespace }}"
+              - exec
+              - "{{ cilium__verify_client_pod }}"
+              - --
+              - nslookup
+              - kubernetes.default.svc.cluster.local
+          register: cilium__verify_kubernetes_dns_lookup
+          changed_when: false
+
+        - name: Fetch server response via Service DNS name
+          become: true
+          become_user: vagrant
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - "{{ cilium__verify_namespace }}"
+              - exec
+              - "{{ cilium__verify_client_pod }}"
+              - --
+              - wget
+              - -qO-
+              - --timeout=5
+              - "http://{{ cilium__verify_service }}.{{ cilium__verify_namespace }}.svc.cluster.local:8080"
+          register: cilium__verify_dns_service_connectivity
+          changed_when: false
+
+        - name: DNS resolution and DNS-based service access should work
+          ansible.builtin.assert:
+            that:
+              - "'Name:' in cilium__verify_service_dns_lookup.stdout"
+              - "'Name:' in cilium__verify_kubernetes_dns_lookup.stdout"
+              - cilium__verify_dns_service_connectivity.stdout | trim == cilium__verify_server_response
+      always:
+        - name: Delete verification namespace
+          kubernetes.core.k8s:
+            api_version: v1
+            kind: Namespace
+            name: "{{ cilium__verify_namespace }}"
+            state: absent
+            wait: true
+            wait_timeout: 120
+          ignore_errors: true
