@@ -12,17 +12,13 @@
 keepDeprecatedProbes: true
 
 # To minimize datapath disruption during the upgrade, the upgradeCompatibility
-# option should be set to the INITIAL Cilium version which was installed in this
-# cluster.
+# option should be set to the INITIAL Cilium minor version that was installed
+# in this cluster, e.g. "1.17".
 #
-# This is flag is not required for new installations!
-#
-# Valid options are:
-# 1.7 -> if the initial install was Cilium 1.7.x or earlier.
-# 1.8 -> if the initial install was Cilium 1.8.x.
-# 1.9 -> if the initial install was Cilium 1.9.x.
-# 1.10 -> if the initial install was Cilium 1.10.x.
-upgradeCompatibility: "1.7"
+# Leave cilium_upgrade_compatibility empty for fresh installations.
+{% if cilium_upgrade_compatibility | default('') | length > 0 %}
+upgradeCompatibility: {{ cilium_upgrade_compatibility | quote }}
+{% endif %}
 
 # The eBPF-based masquerading implementation is the most efficient implementation.
 # It requires Linux kernel >= 4.19.

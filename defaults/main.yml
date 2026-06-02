@@ -28,6 +28,12 @@ cilium_namespace: "cilium"
 # will be provided to "helm install/template" command as values file.
 cilium_chart_values_directory: "/tmp/cilium/helm"
 
+# To minimize datapath disruption during an upgrade, set this to the initial
+# Cilium minor version that was first installed in the cluster, e.g. "1.17".
+# Leave empty for fresh installations. See the Cilium upgrade guide before
+# changing major or minor releases.
+cilium_upgrade_compatibility: ""
+
 # etcd settings. If "cilium_etcd_enabled" variable is defined and set to "true",
 # Cilium etcd settings are generated and deployed. Otherwise all the following
 # "cilium_etcd_*" settings are ignored.
