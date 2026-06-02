@@ -74,9 +74,12 @@ In general it makes sense to update to the latest Cilium `1.17.x` version first 
 
 - **OTHER**
   - replace injected `ansible_*` facts usage with `ansible_facts[...]` (prepares for ansible-core 2.24 where `INJECT_FACTS_AS_VARS` default changes)
+  - `tasks/upgrade.yml`: handle missing pre-flight leftovers without failing when no `cilium-pre-flight-check` deployment exists
+  - `tasks/pre_flight_check.yml`: replace the fail/rescue retry loop with regular polling so expected pre-flight retries do not cause `molecule converge` to exit with Ansible return code `2`
 
 - **MOLECULE**
   - use own [githubixx Vagrant boxes](https://portal.cloud.hashicorp.com/vagrant/discover/githubixx)
+  - more tests for `molecule verify`
 
 ## 16.0.0+1.17.8
 
@@ -123,7 +126,7 @@ Further reading:
 
 ```yaml
 # Helm chart version
-cilium_chart_version: "1.17.8"
+cilium_chart_version: "1.18.10"
 
 # Helm chart name
 cilium_chart_name: "cilium"
