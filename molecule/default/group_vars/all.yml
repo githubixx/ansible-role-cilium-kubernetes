@@ -134,7 +134,7 @@ k8s_apiserver_settings_user:
 
 k8s_worker_kubelet_settings:
   "config": "{{ k8s_worker_kubelet_conf_dir }}/kubelet-config.yaml"
-  "node-ip": "{{ hostvars[inventory_hostname]['ansible_' + k8s_interface].ipv4.address }}"
+  "node-ip": "{{ hostvars[inventory_hostname]['ansible_facts'][k8s_interface]['ipv4']['address'] }}"
   "kubeconfig": "{{ k8s_worker_kubelet_conf_dir }}/kubeconfig"
   "seccomp-default": ""
 
