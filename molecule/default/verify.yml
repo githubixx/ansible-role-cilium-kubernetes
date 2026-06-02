@@ -1,5 +1,5 @@
 ---
-# Copyright (C) 2020-2025 Robert Wimmer
+# Copyright (C) 2020-2026 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 - name: Verify setup
@@ -101,7 +101,11 @@
     - name: Determine if networking verification should run
       ansible.builtin.set_fact:
         cilium__networking_tests_requested: "{{ cilium_setup_networking | default('') == 'install' }}"
-        cilium__networking_tests_enabled: "{{ (cilium_setup_networking | default('') == 'install') or ((cilium__coredns_deployment_info.resources | default([])) | length > 0) }}"
+        cilium__networking_tests_enabled: >-
+          {{
+            (cilium_setup_networking | default('') == 'install')
+            or ((cilium__coredns_deployment_info.resources | default([])) | length > 0)
+          }}
 
     - name: Skip extended networking verification if CoreDNS is not installed
       ansible.builtin.debug:
@@ -372,4 +376,5 @@
             state: absent
             wait: true
             wait_timeout: 120
-          ignore_errors: true
+          register: cilium__verify_namespace_delete
+          failed_when: false

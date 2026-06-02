@@ -1,4 +1,4 @@
-# Copyright (C) 2020-2025 Robert Wimmer
+# Copyright (C) 2020-2026 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 # See https://github.com/cilium/cilium/blob/master/install/kubernetes/cilium/values.yaml
@@ -45,7 +45,7 @@ etcd:
   enabled: true
   endpoints:
   {% for host in groups[cilium_etcd_nodes_group] -%}
-  - {% if cilium_etcd_secrets_name is defined %}https{% else %}http{% endif -%}://{{ hostvars[host]['ansible_' + cilium_etcd_interface].ipv4.address }}:{{ cilium_etcd_client_port }}
+  - {% if cilium_etcd_secrets_name is defined %}https{% else %}http{% endif -%}://{{ hostvars[host]['ansible_facts'][cilium_etcd_interface]['ipv4']['address'] }}:{{ cilium_etcd_client_port }}
   {% endfor -%}
   ssl: {% if cilium_etcd_secrets_name is defined %}true{% else %}false{% endif -%}
 {% endif %}
