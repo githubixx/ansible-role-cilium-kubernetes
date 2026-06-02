@@ -318,6 +318,12 @@ Installing `Cilium` and the required resources. This will setup a few virtual ma
 molecule converge -- --extra-vars cilium_action=install
 ```
 
+Or installing a specific version to test the upgrade later (see below). E.g.:
+
+```bash
+molecule converge -- --extra-vars "cilium_chart_version=1.17.8"
+```
+
 The following command can be used to install [CoreDNS](https://github.com/githubixx/ansible-kubernetes-playbooks/tree/master/coredns) for Kubernetes DNS stuff and taints controller nodes to only run Cilium pods:
 
 ```bash
@@ -328,6 +334,12 @@ Upgrading `Cilium` or changing parameters:
 
 ```bash
 molecule converge -- --extra-vars cilium_action=upgrade
+```
+
+Or setting some specific variables:
+
+```bash
+molecule converge -- --extra-vars "cilium_action=upgrade cilium_upgrade_compatibility=1.17 cilium_chart_version=1.18.10"
 ```
 
 Deleting `Cilium` and its resources:
