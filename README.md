@@ -54,6 +54,8 @@ See full [CHANGELOG.md](https://github.com/githubixx/ansible-role-kubernetes-wor
 ## 17.0.1+1.18.10
 
 - **Other**
+  - replace injected `ansible_*` facts usage with `ansible_facts[...]` (prepares for ansible-core 2.24 where `INJECT_FACTS_AS_VARS` default changes)
+  - fix ansible-lint issues
   - update copyright year headers from `2020-2025` to `2020-2026`
 
 ## 17.0.0+1.18.10
