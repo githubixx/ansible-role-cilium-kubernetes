@@ -28,6 +28,7 @@ In general it makes sense to update to the latest Cilium `1.17.x` version first 
 
 - **MOLECULE**
   - use own [githubixx Vagrant boxes](https://portal.cloud.hashicorp.com/vagrant/discover/githubixx)
+  - more tests for `molecule verify`
 
 ## 16.0.0+1.17.8
 
