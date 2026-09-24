@@ -5,6 +5,11 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Changelog
 
+## 17.0.2+1.18.14
+
+- **Update**
+  - upgrade Cilium `1.18.14`
+
 ## 17.0.1+1.18.10
 
 - **Other**

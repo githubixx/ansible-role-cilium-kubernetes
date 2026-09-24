@@ -2,8 +2,8 @@
 # Copyright (C) 2020-2026 Robert Wimmer
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# Helm chart version (uses Cilium v1.18.10)
-cilium_chart_version: "1.18.10"
+# Helm chart version (uses Cilium v1.18.14)
+cilium_chart_version: "1.18.14"
 
 # Helm release name
 cilium_release_name: "cilium"
