@@ -5,6 +5,30 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Changelog
 
+## 18.0.0+1.19.8
+
+**NOTE:** Before upgrading from Cilium `1.18.x` to `1.19.8`, upgrade to `1.18.14` first. Cilium recommends the latest patch of the current minor series before a minor upgrade; the `1.18.11` through `1.18.14` release notes do not require an additional migration for this role's default settings. Review the [1.19 Upgrade Notes](https://docs.cilium.io/en/v1.19/operations/upgrade/#current-release-required-changes) for any cluster-specific policies or custom values.
+
+- **Breaking**
+  - Remove `nodePort.enabled` from the default values: Cilium 1.19 removed the independent NodePort enable flag. The role keeps `kubeProxyReplacement: "false"` to avoid changing existing kube-proxy deployments. Users who relied on Cilium's NodePort implementation must plan a separate migration to kube-proxy replacement. See the checks below before upgrading.
+- **Update**
+  - Upgrade the Cilium Helm chart to `1.19.8`. The existing Helm repository remains supported; the role continues to pass a values file rather than reuse old chart values.
+- **Further reading**
+  - [Cilium 1.19.0 CHANGELOG](https://github.com/cilium/cilium/blob/v1.19.0/CHANGELOG.md)
+  - [Cilium 1.19.0 release](https://github.com/cilium/cilium/releases/tag/v1.19.0)
+
+**NodePort and kube-proxy checks:** With the role defaults, kube-proxy remains in place for Service handling while Cilium keeps BPF masquerading and socket LB enabled for in-cluster traffic. Before upgrading, record the running Cilium version and status, and list allocated NodePorts across all namespaces (including those on `LoadBalancer` Services). Adjust `cilium` below if your namespace differs:
+
+```bash
+kubectl -n cilium exec ds/cilium -- cilium-dbg version
+kubectl -n cilium exec ds/cilium -- cilium-dbg status --verbose | grep -E 'KubeProxyReplacement|Masquerading|NodePort'
+kubectl get services --all-namespaces -o json | jq -r '.items[] as $svc | $svc.spec.ports[]? | select(.nodePort != null) | [$svc.metadata.namespace, $svc.metadata.name, $svc.spec.type, .protocol, .port, .nodePort] | @tsv'
+```
+
+No rows from the Service query means no Service has an allocated NodePort; ordinary `port` and `targetPort` fields do not count. Before the upgrade, `NodePort: Enabled` may appear alongside `KubeProxyReplacement: False` because the old NodePort flag was enabled, but that does not mean any Service uses a NodePort. If NodePorts are allocated, determine whether clients use them before upgrading: Cilium's independent NodePort handling cannot be retained in 1.19 with replacement disabled. Check kube-proxy on each node with `systemctl is-active kube-proxy` if it is installed as a systemd service (or check its DaemonSet if deployed that way).
+
+After upgrading, rerun the version, status, Service, and kube-proxy checks. With the role defaults, expect Cilium 1.19.8, `KubeProxyReplacement: False`, BPF masquerading on the intended devices, and kube-proxy active. In 1.19, Cilium's NodePort status should no longer show `Enabled` with replacement disabled; socket LB and BPF masquerading can still be enabled. Test pod-to-Service connectivity and pod egress, including over any special egress interface, rather than inferring connectivity from the status output alone. Do not enable full kube-proxy replacement merely to preserve the removed flag; that requires a separate migration plan.
+
 ## 17.0.2+1.18.14
 
 - **Update**

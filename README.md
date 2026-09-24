@@ -11,6 +11,8 @@ This Ansible role installs [Cilium](https://docs.cilium.io) network on a Kuberne
 
 I tag every release and try to stay with [semantic versioning](http://semver.org). If you want to use the role I recommend to checkout the latest tag. The master branch is basically development while the tags mark stable releases. But in general I try to keep master in good shape too. A tag `17.0.2+1.18.14` means this is release `17.0.2` of this role and it contains Cilium chart version `1.18.14`. If the role itself changes `X.Y.Z` before `+` will increase. If the Cilium chart version changes `X.Y.Z` after `+` will increase too. This allows to tag bugfixes and new major versions of the role while it's still developed for a specific Cilium release.
 
+For upgrades from `1.18.10`, first upgrade Cilium to `1.18.14` with chart version `1.18.14`, then upgrade to `1.19.8`. Review the [Cilium 1.19 upgrade notes](https://docs.cilium.io/en/v1.19/operations/upgrade/#current-release-required-changes) and check any custom Helm values and policies separately. In particular, Cilium 1.19 removed `nodePort.enabled`; this role no longer enables Cilium NodePort independently of kube-proxy replacement. The default values keep `kubeProxyReplacement: "false"`, so do not remove kube-proxy as part of this role upgrade. Set `cilium_upgrade_compatibility` to the initial Cilium minor version installed on the cluster when upgrading.
+
 ## Requirements
 
 You need to have [Helm 3](https://helm.sh/) binary installed on that host where `ansible-playbook` is executed or on that host where you delegated the playbooks to (e.g. by using `cilium_delegate_to` variable). You can either
@@ -40,7 +42,7 @@ And of course you need a Kubernetes Cluster ;-)
 roles:
   - name: githubixx.cilium_kubernetes
     src: https://github.com/githubixx/ansible-role-cilium-kubernetes.git
-    version: 17.0.2+1.18.14
+    version: 18.0.0+1.19.8
 ```
 
 ## Changelog
@@ -50,6 +52,11 @@ roles:
 See full [CHANGELOG.md](https://github.com/githubixx/ansible-role-kubernetes-worker/blob/master/CHANGELOG.md)
 
 **Recent changes:**
+
+## 18.0.0+1.19.8
+
+- Upgrade Cilium chart to `1.19.8` and remove the obsolete `nodePort.enabled` value.
+- Upgrade existing `1.18.10` clusters to `1.18.14` first. See the [changelog](CHANGELOG.md) for upgrade details.
 
 ## 17.0.2+1.18.14
 
@@ -133,7 +140,7 @@ Further reading:
 
 ```yaml
 # Helm chart version
-cilium_chart_version: "1.18.14"
+cilium_chart_version: "1.19.8"
 
 # Helm chart name
 cilium_chart_name: "cilium"
