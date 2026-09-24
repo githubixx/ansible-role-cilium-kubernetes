@@ -147,6 +147,8 @@ scenario:
   test_sequence:
     - prepare
     - converge
+    - idempotence
+    - verify
 
 verifier:
   name: ansible
