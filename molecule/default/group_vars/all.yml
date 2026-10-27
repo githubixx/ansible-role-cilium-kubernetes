@@ -163,8 +163,56 @@ cilium_etcd_cafile: "ca-etcd.pem"
 cilium_etcd_certfile: "cert-cilium.pem"
 cilium_etcd_keyfile: "cert-cilium-key.pem"
 
-# Delegate tasks to create CoreDNS K8s resources to this host.
+# Helm 3 version used by Cilium and the CoreDNS Helm diff plugin.
+helm_version: "3.19.5"
+
+# Guest-local Python environment for Kubernetes modules on the assets host.
+cilium__assets_sdk_directory: ".local/share/cilium-molecule/sdk"
+
+# Run CoreDNS Helm and Kubernetes operations on the assets host as vagrant.
 coredns_delegate_to: "test-assets"
+
+# Use the kubeconfig prepared for the assets host's unprivileged user.
+coredns_kubeconfig: "{{ k8s_admin_conf_dir }}/config"
+
+# Match the DNS Service address configured by the worker kubelets.
+coredns_service_ip: "10.32.0.254"
+
+# Match the DNS domain configured by the worker kubelets.
+coredns_cluster_domain: "cluster.local"
+
+# The chart replaces the entire servers list. Keep the previous scenario's
+# Corefile plugin order and settings except for forwarding, which uses the
+# CoreDNS role's authenticated Quad9 DNS-over-TLS example. The TCP flag exposes
+# both UDP and TCP DNS Service ports for clients.
+coredns_values:
+  servers:
+    - zones:
+        - zone: "."
+          use_tcp: true
+      port: 53
+      plugins:
+        - name: errors
+        - name: health
+          configBlock: "lameduck 5s"
+        - name: kubernetes
+          parameters: "cluster.local in-addr.arpa ip6.arpa"
+          configBlock: |-
+            pods insecure
+            fallthrough in-addr.arpa ip6.arpa
+        - name: prometheus
+          parameters: ":9153"
+        - name: forward
+          parameters: ". tls://9.9.9.9"
+          configBlock: |-
+            tls_servername dns.quad9.net
+            health_check 10s
+        - name: cache
+          parameters: "30"
+        - name: loop
+        - name: reload
+        - name: loadbalance
+        - name: ready
 
 # Common name for "etcd" certificate authority certificates.
 ca_etcd_csr_cn: "etcd"

@@ -7,6 +7,9 @@ wireguard_port: 51820
 wireguard_persistent_keepalive: "30"
 wireguard_endpoint: "172.16.10.5"
 
+# Preparation creates this guest-local environment before gathering facts.
+ansible_python_interpreter: "{{ cilium__assets_sdk_directory }}/bin/python"
+
 k8s_controller_primary: "{{ groups['k8s_controller'] | first }}"
 k8s_controller_primary_interface: "{{ hostvars[k8s_controller_primary]['k8s_interface'] }}"
 k8s_admin_api_endpoint_host: "{{ hostvars[k8s_controller_primary]['ansible_facts'][k8s_controller_primary_interface]['ipv4']['address'] }}"
