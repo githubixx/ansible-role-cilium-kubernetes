@@ -15,6 +15,25 @@
     cilium__verify_worker_nodes: "{{ groups['k8s_worker'] | difference(groups['k8s_controller'] | default([])) }}"
     cilium__verify_server_node: "{{ cilium__verify_worker_nodes[0] if (cilium__verify_worker_nodes | length) > 0 else '' }}"
     cilium__verify_client_node: "{{ cilium__verify_worker_nodes[1] if (cilium__verify_worker_nodes | length) > 1 else '' }}"
+    cilium__expected_corefile: >-
+      .:53 {
+      errors
+      health { lameduck 5s }
+      kubernetes cluster.local in-addr.arpa ip6.arpa {
+      pods insecure
+      fallthrough in-addr.arpa ip6.arpa
+      }
+      prometheus :9153
+      forward . tls://9.9.9.9 {
+      tls_servername dns.quad9.net
+      health_check 10s
+      }
+      cache 30
+      loop
+      reload
+      loadbalance
+      ready
+      }
   tasks:
     - name: Fetch Cilium DaemonSet information
       kubernetes.core.k8s_info:
@@ -131,6 +150,38 @@
           ansible.builtin.assert:
             that:
               - (cilium__coredns_deployment_info.resources[0].status.readyReplicas | default(0) | int) >= 1
+
+        - name: Fetch CoreDNS ConfigMap
+          kubernetes.core.k8s_info:
+            api_version: v1
+            kind: ConfigMap
+            name: coredns
+            namespace: kube-system
+          register: cilium__coredns_configmap_info
+
+        - name: Fetch cluster DNS Service
+          kubernetes.core.k8s_info:
+            api_version: v1
+            kind: Service
+            name: kube-dns
+            namespace: kube-system
+          register: cilium__coredns_service_info
+
+        - name: Verify the Helm-managed CoreDNS configuration
+          ansible.builtin.assert:
+            that:
+              - cilium__coredns_deployment_info.resources[0].metadata.annotations['githubixx.github.io/coredns-role'] == 'true'
+              - cilium__coredns_deployment_info.resources[0].metadata.annotations['meta.helm.sh/release-name'] == 'coredns'
+              - cilium__coredns_configmap_info.resources | length == 1
+              - cilium__coredns_service_info.resources | length == 1
+              - cilium__coredns_service_info.resources[0].spec.clusterIP == '10.32.0.254'
+              - >-
+                cilium__coredns_service_info.resources[0].spec.ports
+                | selectattr('port', 'equalto', 53) | map(attribute='protocol') | sort | list == ['TCP', 'UDP']
+              - >-
+                cilium__coredns_configmap_info.resources[0].data.Corefile | regex_replace('\s+', ' ') | trim
+                == cilium__expected_corefile | regex_replace('\s+', ' ') | trim
+            fail_msg: CoreDNS is not the expected role-managed release, or its DNS Service or Corefile differs from the scenario configuration.
 
         - name: Create verification namespace
           kubernetes.core.k8s:
@@ -343,6 +394,23 @@
           register: cilium__verify_kubernetes_dns_lookup
           changed_when: false
 
+        - name: Resolve a public hostname through the Quad9 TLS forwarder
+          become: true
+          become_user: vagrant
+          ansible.builtin.command:
+            argv:
+              - kubectl
+              - -n
+              - "{{ cilium__verify_namespace }}"
+              - exec
+              - "{{ cilium__verify_client_pod }}"
+              - --
+              - nslookup
+              - -type=A
+              - example.com.
+          register: cilium__verify_external_dns_lookup
+          changed_when: false
+
         - name: Fetch server response via Service DNS name
           become: true
           become_user: vagrant
@@ -366,6 +434,8 @@
             that:
               - "'Name:' in cilium__verify_service_dns_lookup.stdout"
               - "'Name:' in cilium__verify_kubernetes_dns_lookup.stdout"
+              - "'Name:' in cilium__verify_external_dns_lookup.stdout"
+              - "'example.com' in cilium__verify_external_dns_lookup.stdout"
               - cilium__verify_dns_service_connectivity.stdout | trim == cilium__verify_server_response
       always:
         - name: Delete verification namespace
