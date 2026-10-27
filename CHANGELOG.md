@@ -5,6 +5,16 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 # Changelog
 
+## 18.1.0+1.19.10
+
+- **Update**
+  - Upgrade the Cilium Helm chart to `1.19.10`, a security patch release. See the [upstream release notes](https://github.com/cilium/cilium/releases/tag/v1.19.10) for details.
+  - `CiliumEnvoyConfig` now redirects only Services in its own namespace; namespace-less Service references in `CiliumClusterwideEnvoyConfig` again default to `default`.
+- **Molecule**
+  - Install Molecule CoreDNS with the `githubixx.coredns` role while preserving the previous cluster DNS configuration.
+  - Update the assets VM's pinned uv bootstrap to `0.13.6`.
+  - Forward Molecule CoreDNS queries to Quad9 using authenticated DNS-over-TLS.
+
 ## 18.0.0+1.19.8
 
 **NOTE:** Before upgrading from Cilium `1.18.x` to `1.19.8`, upgrade to `1.18.14` first. Cilium recommends the latest patch of the current minor series before a minor upgrade; the `1.18.11` through `1.18.14` release notes do not require an additional migration for this role's default settings. Review the [1.19 Upgrade Notes](https://docs.cilium.io/en/v1.19/operations/upgrade/#current-release-required-changes) for any cluster-specific policies or custom values.
